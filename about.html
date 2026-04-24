@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — Retro Closet 868</title>
+  <meta name="description" content="Born in Trinidad. Built for the culture. The story behind Retro Closet 868 — TT's premier football jersey store.">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" type="image/png" href="images/logo.png">
+</head>
+<body>
+
+<!-- ── Navigation ───────────────────────────────────────── -->
+<nav class="nav scrolled" id="nav">
+  <div class="nav__inner">
+    <a href="index.html" class="nav__logo">
+      <img src="images/logo.png" alt="Retro Closet 868" onerror="this.style.display='none'">
+      <div class="nav__logo-text">
+        Retro Closet
+        <span>868 · Trinidad</span>
+      </div>
+    </a>
+    <ul class="nav__links" role="list">
+      <li><a href="index.html" class="nav__link">Home</a></li>
+      <li><a href="catalogue.html" class="nav__link">Catalogue</a></li>
+      <li><a href="about.html" class="nav__link">About</a></li>
+    </ul>
+    <div class="nav__right">
+      <a href="cart.html" class="nav__cart" aria-label="Shopping cart">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/>
+        </svg>
+        <span class="nav__cart-badge" aria-live="polite"></span>
+      </a>
+      <button class="nav__hamburger" aria-label="Toggle menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile menu -->
+<div class="nav__mobile" aria-hidden="true">
+  <ul class="nav__mobile-links" role="list">
+    <li><a href="index.html" class="nav__mobile-link">Home <span class="text-gold">↗</span></a></li>
+    <li><a href="catalogue.html" class="nav__mobile-link">Catalogue <span class="text-gold">↗</span></a></li>
+    <li><a href="about.html" class="nav__mobile-link">About <span class="text-gold">↗</span></a></li>
+    <li><a href="cart.html" class="nav__mobile-link">Cart <span class="text-gold">↗</span></a></li>
+  </ul>
+</div>
+
+<!-- ── Cart Sidebar ──────────────────────────────────────── -->
+<div class="cart-overlay"></div>
+<aside class="cart-sidebar" aria-label="Shopping cart">
+  <div class="cart-sidebar__head">
+    <div>
+      <span class="cart-sidebar__title">Your Cart</span>
+      <span class="cart-sidebar__count">(0)</span>
+    </div>
+    <button class="cart-sidebar__close" aria-label="Close cart">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="16" height="16">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+  <div class="cart-sidebar__items"></div>
+  <div class="cart-sidebar__empty" style="display:none">
+    <p>Your cart is empty</p>
+    <a href="catalogue.html" class="btn-outline"><span>Shop Now</span></a>
+  </div>
+  <div class="cart-sidebar__footer" style="display:none">
+    <div class="cart-sidebar__subtotal">
+      <span class="cart-sidebar__subtotal-label">Subtotal</span>
+      <span class="cart-sidebar__subtotal-amount">TTD $0</span>
+    </div>
+    <div class="cart-sidebar__actions">
+      <a href="cart.html" class="btn-gold"><span>Checkout</span></a>
+      <button class="btn-outline" onclick="document.querySelector('.cart-overlay').click()"><span>Continue Shopping</span></button>
+    </div>
+  </div>
+</aside>
+
+<!-- ── About Hero ────────────────────────────────────────── -->
+<section class="about-hero">
+  <div class="about-hero__bg" style="background-image:url('images/about-hero.jpg')"></div>
+  <div class="about-hero__overlay"></div>
+  <div class="about-hero__content container">
+    <div class="label" style="margin-bottom:1.25rem;animation:fadeUp 0.8s ease 0.2s both">868 · Trinidad &amp; Tobago</div>
+    <h1 class="display-xl" style="animation:fadeUp 0.8s ease 0.4s both">
+      Born in Trinidad.<br>
+      <em style="color:var(--gold)">Built for<br>the culture.</em>
+    </h1>
+  </div>
+</section>
+
+<!-- ── Brand Story ───────────────────────────────────────── -->
+<div class="container">
+  <div class="brand-story">
+    <div class="reveal">
+      <div class="label" style="margin-bottom:1rem">Our Story</div>
+      <div class="gold-rule"></div>
+      <p class="brand-story__text">
+        Retro Closet 868 was born from a simple obsession: finding the jerseys that tell the real story of football.
+        <br><br>
+        <strong>Not replicas. Not knock-offs.</strong> The real kits — the ones worn during title wins, World Cup glories, and iconic moments that live forever in the game.
+        <br><br>
+        We started with a wardrobe full of jerseys, a deep love for the culture, and a belief that Trinidad &amp; Tobago deserved access to the best of football fashion — without having to travel abroad or pay inflated prices.
+        <br><br>
+        Today, Retro Closet 868 serves football lovers across TT, bringing them the most iconic jerseys in the game — from Ronaldo's treble season at United to Mbappe's Madrid debut kit.
+      </p>
+    </div>
+    <div class="reveal" style="transition-delay:0.15s">
+      <blockquote class="brand-story__pullquote">
+        "Every jersey has a story. We just make it yours."
+      </blockquote>
+      <div class="gold-rule" style="margin-top:2rem"></div>
+      <p class="brand-story__text" style="margin-top:1.5rem">
+        We carefully curate each piece in our collection — if it doesn't have history, heat, or culture behind it, it doesn't make the cut.
+        <br><br>
+        <strong>Retro Closet 868. The jersey store TT was waiting for.</strong>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ── Owners ─────────────────────────────────────────────── -->
+<section class="owners">
+  <div class="container">
+    <div class="reveal">
+      <div class="label" style="margin-bottom:0.75rem">The Founders</div>
+      <h2 class="display-md">The Faces Behind<br><em style="color:var(--gold)">the Closet</em></h2>
+    </div>
+    <div class="owners__grid">
+      <div class="owner-card reveal" style="transition-delay:0.1s">
+        <img
+          class="owner-card__img"
+          src="images/owner1.jpg"
+          alt="Co-Founder"
+          onerror="this.src='';this.style.minHeight='400px';this.style.background='var(--surface-2)'">
+        <div class="owner-card__info">
+          <div class="owner-card__role">Co-Founder</div>
+          <div class="owner-card__name">Owner 1</div>
+          <p class="owner-card__bio">A lifelong football fan and jersey collector who turned a passion into TT's most exciting football fashion brand.</p>
+        </div>
+      </div>
+      <div class="owner-card reveal" style="transition-delay:0.2s">
+        <img
+          class="owner-card__img"
+          src="images/owner2.jpg"
+          alt="Co-Founder"
+          onerror="this.src='';this.style.minHeight='400px';this.style.background='var(--surface-2)'">
+        <div class="owner-card__info">
+          <div class="owner-card__role">Co-Founder</div>
+          <div class="owner-card__name">Owner 2</div>
+          <p class="owner-card__bio">Brought the vision, the grind, and the network to make Retro Closet 868 the brand it is today.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Brand Ambassadors ──────────────────────────────────── -->
+<section class="ambassadors">
+  <div class="container">
+    <div class="reveal" style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-bottom:3rem">
+      <div>
+        <div class="label" style="margin-bottom:0.75rem">The Community</div>
+        <h2 class="display-md">Brand<br><em style="color:var(--gold)">Ambassadors</em></h2>
+      </div>
+      <a href="catalogue.html" class="btn-outline"><span>Shop the Collection</span></a>
+    </div>
+    <div class="ambassadors__grid">
+      <div class="ambassador-card reveal" style="transition-delay:0.05s">
+        <img class="ambassador-card__img" src="images/ambassador-1.jpg" alt="Brand Ambassador"
+          onerror="this.style.background='var(--surface-2)';this.style.display='none'">
+        <div class="ambassador-card__overlay"></div>
+        <div class="ambassador-card__badge-text">RC868 Ambassador</div>
+        <div class="ambassador-card__name">Ambassador</div>
+      </div>
+      <div class="ambassador-card reveal" style="transition-delay:0.1s">
+        <img class="ambassador-card__img" src="images/ambassador-2.jpg" alt="Brand Ambassador"
+          onerror="this.style.background='var(--surface-2)';this.style.display='none'">
+        <div class="ambassador-card__overlay"></div>
+        <div class="ambassador-card__badge-text">RC868 Ambassador</div>
+        <div class="ambassador-card__name">Ambassador</div>
+      </div>
+      <div class="ambassador-card reveal" style="transition-delay:0.15s">
+        <img class="ambassador-card__img" src="images/ambassador-3.jpg" alt="Brand Ambassador"
+          onerror="this.style.background='var(--surface-2)';this.style.display='none'">
+        <div class="ambassador-card__overlay"></div>
+        <div class="ambassador-card__badge-text">RC868 Ambassador</div>
+        <div class="ambassador-card__name">Ambassador</div>
+      </div>
+      <div class="ambassador-card reveal" style="transition-delay:0.2s">
+        <img class="ambassador-card__img" src="images/ambassador-4.jpg" alt="Brand Ambassador"
+          onerror="this.style.background='var(--surface-2)';this.style.display='none'">
+        <div class="ambassador-card__overlay"></div>
+        <div class="ambassador-card__badge-text">RC868 Ambassador</div>
+        <div class="ambassador-card__name">Ambassador</div>
+      </div>
+      <div class="ambassador-card reveal" style="transition-delay:0.25s">
+        <img class="ambassador-card__img" src="images/ambassador-5.jpg" alt="Brand Ambassador"
+          onerror="this.style.background='var(--surface-2)';this.style.display='none'">
+        <div class="ambassador-card__overlay"></div>
+        <div class="ambassador-card__badge-text">RC868 Ambassador</div>
+        <div class="ambassador-card__name">Ambassador</div>
+      </div>
+      <div class="ambassador-card reveal" style="transition-delay:0.3s">
+        <img class="ambassador-card__img" src="images/ambassador-6.jpg" alt="Brand Ambassador"
+          onerror="this.style.background='var(--surface-2)';this.style.display='none'">
+        <div class="ambassador-card__overlay"></div>
+        <div class="ambassador-card__badge-text">RC868 Ambassador</div>
+        <div class="ambassador-card__name">Ambassador</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Brand Values ───────────────────────────────────────── -->
+<section class="brand-values">
+  <div class="container">
+    <div class="reveal" style="text-align:center;margin-bottom:3rem">
+      <div class="label" style="margin-bottom:0.75rem">What We Stand For</div>
+      <h2 class="display-md">Our Values</h2>
+    </div>
+    <div class="values-grid">
+      <div class="value-item reveal" style="transition-delay:0.05s">
+        <div class="value-item__num">01</div>
+        <h3 class="value-item__title">Authenticity</h3>
+        <p class="value-item__text">
+          Every jersey we sell is the real thing. We don't do replicas, we don't do fakes. Quality you can feel from the first stitch.
+        </p>
+      </div>
+      <div class="value-item reveal" style="transition-delay:0.15s">
+        <div class="value-item__num">02</div>
+        <h3 class="value-item__title">Community</h3>
+        <p class="value-item__text">
+          We're from 868. We sell to 868. Everything we do is for the football community here in Trinidad &amp; Tobago.
+        </p>
+      </div>
+      <div class="value-item reveal" style="transition-delay:0.25s">
+        <div class="value-item__num">03</div>
+        <h3 class="value-item__title">Style</h3>
+        <p class="value-item__text">
+          Football and fashion have always been intertwined. We curate the kits that hit both — on the pitch and in the streets.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ────────────────────────────────────────────────── -->
+<section style="padding:6rem 0;text-align:center;border-top:1px solid var(--border)">
+  <div class="container">
+    <div class="reveal">
+      <h2 class="display-md" style="margin-bottom:1.5rem">
+        Ready to wear<br><em style="color:var(--gold)">the legend?</em>
+      </h2>
+      <div class="gold-rule gold-rule--center"></div>
+      <div style="margin-top:2rem">
+        <a href="catalogue.html" class="btn-gold"><span>Shop the Collection</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ────────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer__inner">
+      <div class="footer__brand">
+        <div class="footer__brand-logo">
+          <img src="images/logo.png" alt="Retro Closet 868" onerror="this.style.display='none'">
+          <span class="footer__brand-name">Retro Closet 868</span>
+        </div>
+        <p class="footer__tagline">"Wear the Legend."</p>
+        <div class="footer__social">
+          <a href="https://instagram.com/retrocloset868" class="footer__social-link" aria-label="Instagram" target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+      <div>
+        <div class="footer__nav-title">Navigate</div>
+        <ul class="footer__nav-list">
+          <li><a href="index.html" class="footer__nav-link">Home</a></li>
+          <li><a href="catalogue.html" class="footer__nav-link">Catalogue</a></li>
+          <li><a href="about.html" class="footer__nav-link">About</a></li>
+          <li><a href="cart.html" class="footer__nav-link">Cart</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer__nav-title">Contact</div>
+        <ul class="footer__nav-list">
+          <li><a href="https://instagram.com/retrocloset868" class="footer__nav-link" target="_blank" rel="noopener">@retrocloset868</a></li>
+          <li><a href="#" class="footer__nav-link">Trinidad &amp; Tobago</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span class="footer__copy">&copy; 2025 Retro Closet 868. All rights reserved.</span>
+      <span class="footer__made">868 · Born in Trinidad</span>
+    </div>
+  </div>
+</footer>
+
+<button class="scroll-top" aria-label="Scroll to top">
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5"/>
+  </svg>
+</button>
+
+<script type="module">
+  import './js/main.js';
+  import './js/cart.js';
+</script>
+</body>
+</html>

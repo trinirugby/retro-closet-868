@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catalogue — Retro Closet 868</title>
+  <meta name="description" content="Browse our full collection of premium football jerseys. Retro classics and current season kits delivered across Trinidad & Tobago.">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" type="image/png" href="images/logo.png">
+</head>
+<body>
+
+<!-- ── Navigation ───────────────────────────────────────── -->
+<nav class="nav" id="nav">
+  <div class="nav__inner">
+    <a href="index.html" class="nav__logo">
+      <img src="images/logo.png" alt="Retro Closet 868" onerror="this.style.display='none'">
+      <div class="nav__logo-text">
+        Retro Closet
+        <span>868 · Trinidad</span>
+      </div>
+    </a>
+    <ul class="nav__links" role="list">
+      <li><a href="index.html" class="nav__link">Home</a></li>
+      <li><a href="catalogue.html" class="nav__link">Catalogue</a></li>
+      <li><a href="about.html" class="nav__link">About</a></li>
+    </ul>
+    <div class="nav__right">
+      <a href="cart.html" class="nav__cart" aria-label="Shopping cart">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/>
+        </svg>
+        <span class="nav__cart-badge" aria-live="polite"></span>
+      </a>
+      <button class="nav__hamburger" aria-label="Toggle menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile menu -->
+<div class="nav__mobile" aria-hidden="true">
+  <ul class="nav__mobile-links" role="list">
+    <li><a href="index.html" class="nav__mobile-link">Home <span class="text-gold">↗</span></a></li>
+    <li><a href="catalogue.html" class="nav__mobile-link">Catalogue <span class="text-gold">↗</span></a></li>
+    <li><a href="about.html" class="nav__mobile-link">About <span class="text-gold">↗</span></a></li>
+    <li><a href="cart.html" class="nav__mobile-link">Cart <span class="text-gold">↗</span></a></li>
+  </ul>
+</div>
+
+<!-- ── Cart Sidebar ──────────────────────────────────────── -->
+<div class="cart-overlay"></div>
+<aside class="cart-sidebar" aria-label="Shopping cart">
+  <div class="cart-sidebar__head">
+    <div>
+      <span class="cart-sidebar__title">Your Cart</span>
+      <span class="cart-sidebar__count">(0)</span>
+    </div>
+    <button class="cart-sidebar__close" aria-label="Close cart">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="16" height="16">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+  <div class="cart-sidebar__items"></div>
+  <div class="cart-sidebar__empty" style="display:none">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1" width="48" height="48" style="color:var(--border)">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/>
+    </svg>
+    <p>Your cart is empty</p>
+    <a href="catalogue.html" class="btn-outline"><span>Keep Shopping</span></a>
+  </div>
+  <div class="cart-sidebar__footer" style="display:none">
+    <div class="cart-sidebar__subtotal">
+      <span class="cart-sidebar__subtotal-label">Subtotal</span>
+      <span class="cart-sidebar__subtotal-amount">TTD $0</span>
+    </div>
+    <div class="cart-sidebar__actions">
+      <a href="cart.html" class="btn-gold"><span>Checkout</span></a>
+      <button class="btn-outline" onclick="document.querySelector('.cart-overlay').click()"><span>Continue Shopping</span></button>
+    </div>
+  </div>
+</aside>
+
+<!-- ── Page Header ───────────────────────────────────────── -->
+<div class="container">
+  <div class="page-hero">
+    <div class="page-hero__eyebrow">Collection</div>
+    <h1 class="page-hero__title">The Catalogue</h1>
+    <p class="page-hero__sub">Every jersey, every legend — delivered to your door.</p>
+  </div>
+
+  <!-- Filter tabs -->
+  <div class="filter-bar">
+    <div class="filter-tabs" role="tablist">
+      <button class="filter-tab active" data-filter="all" role="tab">All</button>
+      <button class="filter-tab" data-filter="La Liga" role="tab">La Liga</button>
+      <button class="filter-tab" data-filter="EPL" role="tab">EPL</button>
+      <button class="filter-tab" data-filter="Champions League" role="tab">Champions League</button>
+      <button class="filter-tab" data-filter="Serie A" role="tab">Serie A</button>
+      <button class="filter-tab" data-filter="Bundesliga" role="tab">Bundesliga</button>
+      <button class="filter-tab" data-filter="Ligue 1" role="tab">Ligue 1</button>
+      <button class="filter-tab" data-filter="International" role="tab">International</button>
+      <button class="filter-tab" data-filter="Local / Other" role="tab">Local &amp; Other</button>
+    </div>
+  </div>
+
+  <!-- Result count + grid -->
+  <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:1.5rem">
+    <span id="result-count" class="label" style="color:var(--white-dim)"></span>
+  </div>
+
+  <div class="product-grid" id="product-grid"></div>
+
+  <div style="height:6rem"></div>
+</div>
+
+<!-- ── Footer ────────────────────────────────────────────── -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer__inner">
+      <div class="footer__brand">
+        <div class="footer__brand-logo">
+          <img src="images/logo.png" alt="Retro Closet 868" onerror="this.style.display='none'">
+          <span class="footer__brand-name">Retro Closet 868</span>
+        </div>
+        <p class="footer__tagline">"Wear the Legend."</p>
+        <div class="footer__social">
+          <a href="https://instagram.com/retrocloset868" class="footer__social-link" aria-label="Instagram" target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+      <div>
+        <div class="footer__nav-title">Navigate</div>
+        <ul class="footer__nav-list">
+          <li><a href="index.html" class="footer__nav-link">Home</a></li>
+          <li><a href="catalogue.html" class="footer__nav-link">Catalogue</a></li>
+          <li><a href="about.html" class="footer__nav-link">About</a></li>
+          <li><a href="cart.html" class="footer__nav-link">Cart</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer__nav-title">Contact</div>
+        <ul class="footer__nav-list">
+          <li><a href="https://instagram.com/retrocloset868" class="footer__nav-link" target="_blank" rel="noopener">@retrocloset868</a></li>
+          <li><a href="#" class="footer__nav-link">Trinidad &amp; Tobago</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer__bottom">
+      <span class="footer__copy">&copy; 2025 Retro Closet 868. All rights reserved.</span>
+      <span class="footer__made">868 · Born in Trinidad</span>
+    </div>
+  </div>
+</footer>
+
+<button class="scroll-top" aria-label="Scroll to top">
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5"/>
+  </svg>
+</button>
+
+<script type="module">
+  import './js/main.js';
+  import './js/cart.js';
+  import './js/catalogue.js';
+</script>
+</body>
+</html>

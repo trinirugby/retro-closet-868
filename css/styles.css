@@ -931,9 +931,9 @@ body::before {
 .product-card__add {
   width: 100%;
   padding: 0.85rem 1rem;
-  background: transparent;
-  color: var(--white);
-  border: 1px solid var(--border);
+  background: var(--gold);
+  color: var(--bg);
+  border: 1px solid var(--gold);
   font-family: var(--font-ui);
   font-size: 0.7rem;
   font-weight: 700;

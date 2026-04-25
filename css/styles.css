@@ -1254,7 +1254,7 @@ body::before {
   text-transform: uppercase;
   color: var(--gold);
   transform: translateY(6px);
-  opacity: 0;
+  opacity: 1;
   transition: opacity var(--transition), transform var(--transition);
 }
 .ambassador-card:hover .ambassador-card__name { opacity: 1; transform: translateY(0); }

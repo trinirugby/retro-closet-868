@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cart & Checkout — Retro Closet 868</title>
+  <title>Cart — Retro Closet 868</title>
+  <meta name="description" content="Your cart — Retro Closet 868.">
   <link rel="stylesheet" href="css/styles.css">
   <link rel="icon" type="image/png" href="images/logo.jpg">
 </head>
@@ -44,153 +45,74 @@
     <li><a href="index.html" class="nav__mobile-link">Home <span class="text-gold">↗</span></a></li>
     <li><a href="catalogue.html" class="nav__mobile-link">Catalogue <span class="text-gold">↗</span></a></li>
     <li><a href="about.html" class="nav__mobile-link">About <span class="text-gold">↗</span></a></li>
+    <li><a href="cart.html" class="nav__mobile-link">Cart <span class="text-gold">↗</span></a></li>
   </ul>
 </div>
 
 <!-- ── Main Cart Page ────────────────────────────────────── -->
 <main class="cart-page">
   <div class="container">
+    <h1 class="cart-page__title">Your Cart</h1>
+    <p class="cart-page__subtitle">Review your items before checkout.</p>
 
-    <!-- ── CART VIEW ──────────────────────────────────────── -->
-    <div id="cart-view" class="cart-view active">
-      <h1 class="cart-page__title">Your Cart</h1>
-      <p class="cart-page__subtitle">Review your selection before checkout.</p>
-
-      <!-- Empty state -->
-      <div id="cart-empty" style="display:none;text-align:center;padding:5rem 0">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1" width="64" height="64" style="color:var(--border);margin:0 auto 1.5rem;display:block">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/>
-        </svg>
-        <p style="font-family:var(--font-display);font-style:italic;font-size:1.25rem;color:var(--white-dim);margin-bottom:1.5rem">Your cart is empty.</p>
-        <a href="catalogue.html" class="btn-gold"><span>Browse the Collection</span></a>
-      </div>
-
-      <!-- Cart with items -->
-      <div id="cart-full">
-        <div class="cart-layout">
-          <div>
-            <table class="cart-table">
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th style="text-align:center">Qty</th>
-                  <th style="text-align:right">Price</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="cart-table-body"></tbody>
-            </table>
-            <div style="margin-top:1.5rem">
-              <a href="catalogue.html" style="font-family:var(--font-ui);font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--white-dim);display:inline-flex;align-items:center;gap:0.5rem;transition:color 0.3s">
-                ← Continue Shopping
-              </a>
-            </div>
-          </div>
-
-          <!-- Summary panel -->
-          <div class="cart-summary">
-            <div class="cart-summary__title">Order Summary</div>
-            <div class="cart-summary__row">
-              <span id="cart-item-count">0 items</span>
-            </div>
-            <div class="cart-summary__row cart-summary__row--total">
-              <span>Total</span>
-              <span class="cart-summary__total-price" id="cart-total-price">TTD $0</span>
-            </div>
-            <p style="font-size:0.72rem;color:var(--white-dim);font-family:var(--font-ui);margin-top:0.75rem;line-height:1.5">
-              Delivery fees calculated at checkout based on your location in TT.
-            </p>
-            <div class="cart-summary__actions">
-              <button class="btn-gold" id="proceed-to-checkout" onclick="showCheckout()">
-                <span>Proceed to Checkout</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+    <!-- Empty state -->
+    <div id="cart-empty" style="display:none;text-align:center;padding:5rem 0">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1" width="64" height="64" style="color:var(--border);margin:0 auto 1.5rem;display:block">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/>
+      </svg>
+      <p style="font-family:var(--font-display);font-style:italic;font-size:1.25rem;color:var(--white-dim);margin-bottom:1.5rem">Your cart is empty.</p>
+      <a href="catalogue.html" class="btn-gold"><span>Shop Now</span></a>
     </div>
 
-    <!-- ── CHECKOUT VIEW ──────────────────────────────────── -->
-    <div id="checkout-view" class="checkout-view">
-      <h1 class="cart-page__title">Checkout</h1>
-      <p class="cart-page__subtitle">Fill in your details and we'll get your order sorted.</p>
-
-      <div class="checkout-layout">
-        <form class="checkout-form" id="checkout-form" novalidate>
-          <div class="form-section">
-            <div class="form-section__title">Contact Info</div>
-            <div class="form-grid">
-              <div class="form-field">
-                <label for="full-name">Full Name *</label>
-                <input type="text" id="full-name" name="fullName" placeholder="Your full name" required autocomplete="name">
-              </div>
-              <div class="form-field">
-                <label for="phone">Phone Number *</label>
-                <input type="tel" id="phone" name="phone" placeholder="e.g. 868-XXX-XXXX" required autocomplete="tel">
-              </div>
-            </div>
+    <!-- Cart with items -->
+    <div id="cart-full">
+      <div class="cart-layout">
+        <!-- Items table -->
+        <div>
+          <table class="cart-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th style="text-align:center">Qty</th>
+                <th style="text-align:right">Price</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="cart-table-body"></tbody>
+          </table>
+          <div style="margin-top:1.5rem">
+            <a href="catalogue.html" style="font-family:var(--font-ui);font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--white-dim);display:inline-flex;align-items:center;gap:0.5rem;transition:color 0.3s" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--white-dim)'">
+              ← Continue Shopping
+            </a>
           </div>
-
-          <div class="form-section">
-            <div class="form-section__title">Delivery Details</div>
-            <div class="form-grid form-grid--full">
-              <div class="form-field">
-                <label for="address">Delivery Address *</label>
-                <input type="text" id="address" name="address" placeholder="Street address, city, region" required autocomplete="street-address">
-              </div>
-              <div class="form-field">
-                <label for="notes">Delivery Notes <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
-                <textarea id="notes" name="notes" placeholder="Landmark, gate code, preferred delivery time..."></textarea>
-              </div>
-            </div>
-          </div>
-
-          <!-- Order summary in checkout -->
-          <div class="form-section">
-            <div class="form-section__title">Order Summary</div>
-            <div id="checkout-items-summary"></div>
-            <div style="display:flex;justify-content:space-between;padding-top:1rem;margin-top:0.5rem;border-top:1px solid var(--border)">
-              <span style="font-family:var(--font-ui);font-size:0.7rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--white-dim)">Total</span>
-              <span style="font-family:var(--font-display);font-size:1.5rem;font-weight:600;color:var(--gold)" id="checkout-total">TTD $0</span>
-            </div>
-          </div>
-
-          <div class="form-actions">
-            <button type="submit" class="btn-gold" id="confirm-order-btn">
-              <span>Confirm Order</span>
-            </button>
-            <button type="button" class="wipay-btn">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="16" height="16">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/>
-              </svg>
-              Pay with WiPay
-              <span class="wipay-btn__badge">Coming Soon</span>
-            </button>
-            <button type="button" class="btn-outline" onclick="showCartView()">
-              <span>← Back to Cart</span>
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- ── CONFIRMATION VIEW ──────────────────────────────── -->
-    <div id="confirm-view" class="confirm-view">
-      <div class="container" style="padding-top:2rem">
-        <div class="confirm__icon">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
-          </svg>
         </div>
-        <h1 class="confirm__heading">Order Confirmed!</h1>
-        <p class="confirm__sub">We'll be in touch via WhatsApp or phone to arrange delivery.</p>
-        <div class="confirm__ref" id="confirm-ref">RC868-XXXXXX</div>
-        <div class="confirm__summary" id="confirm-summary">
-          <div class="confirm__summary-title">Order Details</div>
-        </div>
-        <div class="confirm__actions">
-          <a href="catalogue.html" class="btn-gold"><span>Continue Shopping</span></a>
-          <a href="index.html" class="btn-outline"><span>Back to Home</span></a>
+
+        <!-- Summary panel -->
+        <div class="cart-summary">
+          <div class="cart-summary__title">Order Summary</div>
+          <div class="cart-summary__row">
+            <span>Subtotal</span>
+            <span id="cart-subtotal">TTD $0</span>
+          </div>
+          <div class="cart-summary__row" id="delivery-row">
+            <span>Delivery</span>
+            <span id="cart-delivery">TTD $50</span>
+          </div>
+          <div class="cart-summary__row cart-summary__row--total">
+            <span>Total</span>
+            <span class="cart-summary__total-price" id="cart-total-price">TTD $0</span>
+          </div>
+          <p id="free-delivery-note" style="font-size:0.7rem;color:var(--gold);font-family:var(--font-ui);margin-top:0.5rem;display:none">
+            ✓ Free delivery on orders over TTD $500
+          </p>
+          <p id="delivery-threshold-note" style="font-size:0.7rem;color:var(--white-dim);font-family:var(--font-ui);margin-top:0.5rem;line-height:1.5">
+            Free delivery on orders over TTD $500.
+          </p>
+          <div class="cart-summary__actions">
+            <a href="checkout.html" class="btn-gold" id="proceed-btn" style="width:100%;justify-content:center;text-align:center">
+              <span>Proceed to Checkout</span>
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -222,6 +144,7 @@
           <li><a href="index.html" class="footer__nav-link">Home</a></li>
           <li><a href="catalogue.html" class="footer__nav-link">Catalogue</a></li>
           <li><a href="about.html" class="footer__nav-link">About</a></li>
+          <li><a href="cart.html" class="footer__nav-link">Cart</a></li>
         </ul>
       </div>
       <div>
@@ -239,10 +162,18 @@
   </div>
 </footer>
 
+<button class="scroll-top" aria-label="Scroll to top">
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5"/>
+  </svg>
+</button>
+
 <script type="module">
   import './js/main.js';
 
   const STORAGE_KEY = 'rc868_cart';
+  const DELIVERY_FEE = 50;
+  const FREE_DELIVERY_THRESHOLD = 500;
 
   function getCart() {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
@@ -250,17 +181,8 @@
   }
   function saveCart(cart) { localStorage.setItem(STORAGE_KEY, JSON.stringify(cart)); }
 
-  function getTotal(cart) {
-    return cart.reduce((s, i) => s + i.price * i.qty, 0);
-  }
-  function getCount(cart) {
-    return cart.reduce((s, i) => s + i.qty, 0);
-  }
-
-  function generateRef() {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    return 'RC868-' + Array.from({length: 6}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-  }
+  function getSubtotal(cart) { return cart.reduce((s, i) => s + i.price * i.qty, 0); }
+  function getCount(cart) { return cart.reduce((s, i) => s + i.qty, 0); }
 
   function updateBadge() {
     const c = getCount(getCart());
@@ -270,13 +192,16 @@
     });
   }
 
-  function renderCartView() {
+  function renderCart() {
     const cart = getCart();
-    const emptyEl = document.getElementById('cart-empty');
-    const fullEl  = document.getElementById('cart-full');
-    const tbody   = document.getElementById('cart-table-body');
-    const countEl = document.getElementById('cart-item-count');
-    const totalEl = document.getElementById('cart-total-price');
+    const emptyEl   = document.getElementById('cart-empty');
+    const fullEl    = document.getElementById('cart-full');
+    const tbody     = document.getElementById('cart-table-body');
+    const subtotalEl = document.getElementById('cart-subtotal');
+    const deliveryEl = document.getElementById('cart-delivery');
+    const totalEl   = document.getElementById('cart-total-price');
+    const freeNote  = document.getElementById('free-delivery-note');
+    const threshNote = document.getElementById('delivery-threshold-note');
 
     if (cart.length === 0) {
       emptyEl.style.display = 'block';
@@ -286,8 +211,16 @@
     emptyEl.style.display = 'none';
     fullEl.style.display  = 'block';
 
-    if (countEl) countEl.textContent = `${getCount(cart)} item${getCount(cart) !== 1 ? 's' : ''}`;
-    if (totalEl) totalEl.textContent = `TTD $${getTotal(cart).toLocaleString()}`;
+    const subtotal = getSubtotal(cart);
+    const delivery = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
+    const total = subtotal + delivery;
+
+    if (subtotalEl) subtotalEl.textContent = `TTD $${subtotal.toLocaleString()}`;
+    if (deliveryEl) deliveryEl.textContent = delivery === 0 ? 'FREE' : `TTD $${DELIVERY_FEE}`;
+    if (totalEl) totalEl.textContent = `TTD $${total.toLocaleString()}`;
+
+    if (freeNote) freeNote.style.display = delivery === 0 ? 'block' : 'none';
+    if (threshNote) threshNote.style.display = delivery === 0 ? 'none' : 'block';
 
     if (tbody) {
       tbody.innerHTML = cart.map(item => `
@@ -325,103 +258,18 @@
     if (!item) return;
     item.qty = Math.max(1, item.qty + delta);
     saveCart(cart);
-    renderCartView();
+    renderCart();
     updateBadge();
   };
 
   window.removeItem = function(key) {
     saveCart(getCart().filter(i => i.key !== key));
-    renderCartView();
+    renderCart();
     updateBadge();
   };
 
-  window.showCheckout = function() {
-    const cart = getCart();
-    if (cart.length === 0) return;
-
-    // Populate checkout summary
-    const summaryEl = document.getElementById('checkout-items-summary');
-    const totalEl   = document.getElementById('checkout-total');
-    if (summaryEl) {
-      summaryEl.innerHTML = cart.map(item => `
-        <div style="display:flex;justify-content:space-between;align-items:baseline;padding:0.5rem 0;border-bottom:1px solid var(--border)">
-          <span style="font-family:var(--font-ui);font-size:0.82rem">${item.name} × ${item.qty} <span style="color:var(--white-dim);font-size:0.7rem">(${item.size})</span></span>
-          <span style="font-family:var(--font-display);color:var(--gold)">TTD $${(item.price * item.qty).toLocaleString()}</span>
-        </div>`).join('');
-    }
-    if (totalEl) totalEl.textContent = `TTD $${getTotal(cart).toLocaleString()}`;
-
-    document.getElementById('cart-view').classList.remove('active');
-    document.getElementById('checkout-view').classList.add('active');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  window.showCartView = function() {
-    document.getElementById('checkout-view').classList.remove('active');
-    document.getElementById('cart-view').classList.add('active');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  // Form submit
-  const form = document.getElementById('checkout-form');
-  form?.addEventListener('submit', (e) => {
-    e.preventDefault();
-
-    const name    = document.getElementById('full-name').value.trim();
-    const phone   = document.getElementById('phone').value.trim();
-    const address = document.getElementById('address').value.trim();
-    const notes   = document.getElementById('notes').value.trim();
-
-    if (!name || !phone || !address) {
-      // Highlight empty required fields
-      [['full-name', name], ['phone', phone], ['address', address]].forEach(([id, val]) => {
-        const el = document.getElementById(id);
-        if (!val) {
-          el.style.borderColor = '#c0392b';
-          el.addEventListener('input', () => el.style.borderColor = '', { once: true });
-        }
-      });
-      return;
-    }
-
-    const cart = getCart();
-    const ref  = generateRef();
-
-    // Show confirmation
-    const confirmRef  = document.getElementById('confirm-ref');
-    const confirmSum  = document.getElementById('confirm-summary');
-    if (confirmRef) confirmRef.textContent = ref;
-    if (confirmSum) {
-      confirmSum.innerHTML = `
-        <div class="confirm__summary-title">Order Details</div>
-        ${cart.map(item => `
-          <div class="confirm__item">
-            <span>${item.name} × ${item.qty} <small style="opacity:0.6">(${item.size})</small></span>
-            <span>TTD $${(item.price * item.qty).toLocaleString()}</span>
-          </div>`).join('')}
-        <div class="confirm__item" style="margin-top:0.5rem;padding-top:0.75rem;border-top:1px solid var(--border)">
-          <strong>Total</strong>
-          <span style="font-size:1.25rem">TTD $${getTotal(cart).toLocaleString()}</span>
-        </div>
-        <div style="margin-top:1rem;font-family:var(--font-ui);font-size:0.78rem;color:var(--white-dim)">
-          <div style="margin-bottom:0.25rem">Name: ${name}</div>
-          <div style="margin-bottom:0.25rem">Phone: ${phone}</div>
-          <div>Address: ${address}${notes ? ` · Notes: ${notes}` : ''}</div>
-        </div>`;
-    }
-
-    // Clear cart
-    localStorage.removeItem(STORAGE_KEY);
-    updateBadge();
-
-    document.getElementById('checkout-view').classList.remove('active');
-    document.getElementById('confirm-view').classList.add('active');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  });
-
-  // Init
   updateBadge();
-  renderCartView();
+  renderCart();
 </script>
 </body>
 </html>

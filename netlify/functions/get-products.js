@@ -11,6 +11,9 @@ const FIELDS = [
   'image_url_back',
   'badge',
   'description',
+  // Exposed so the storefront can surface "Only N left" hints without a
+  // second round-trip. The `{in_stock}=TRUE()` filter is unchanged.
+  'stock_quantity',
 ];
 
 const CORS = {
@@ -69,6 +72,9 @@ exports.handler = async (event) => {
           imageBack: f['image_url_back'] || '',
           badge: f['badge'] || '',
           description: f['description'] || '',
+          // null → 0 (matches dashboard normalisation in lib/types.ts)
+          stockQuantity:
+            typeof f['stock_quantity'] === 'number' ? f['stock_quantity'] : 0,
         });
       }
       offset = data.offset || null;

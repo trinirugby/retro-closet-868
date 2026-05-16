@@ -275,15 +275,66 @@
     }
   }
 
-  // Form validation + submit
+  // ── Submit: POST to /api/place-order ────────────────────────
+  // The Netlify function fans out one PATCH per cart line to the
+  // dashboard, decrementing stock and (if stock hits 0) flipping
+  // in_stock=false in a single atomic write. See:
+  //   netlify/functions/place-order.js
+  //   README.md → "Sync contract"
+  const PLACE_ORDER_URL = '/api/place-order';
   const form = document.getElementById('checkout-form');
-  form?.addEventListener('submit', (e) => {
+  const submitBtn = document.getElementById('place-order-btn');
+  const submitLabel = submitBtn?.querySelector('span');
+  const ORIGINAL_LABEL = submitLabel?.textContent ?? 'Place Order';
+  let inFlight = false;
+
+  function showInlineMessage(kind, text) {
+    let el = document.getElementById('checkout-msg');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'checkout-msg';
+      form.insertAdjacentElement('beforebegin', el);
+    }
+    el.setAttribute('data-kind', kind); // 'success' | 'error'
+    el.style.padding = '1rem 1.25rem';
+    el.style.borderRadius = '6px';
+    el.style.marginBottom = '1.5rem';
+    el.style.fontFamily = 'var(--font-ui)';
+    el.style.fontSize = '0.9rem';
+    el.style.lineHeight = '1.5';
+    el.style.whiteSpace = 'pre-line';
+    if (kind === 'success') {
+      el.style.background = 'rgba(34,197,94,0.12)';
+      el.style.border = '1px solid rgba(34,197,94,0.4)';
+      el.style.color = 'var(--white)';
+    } else {
+      el.style.background = 'rgba(192,57,43,0.12)';
+      el.style.border = '1px solid rgba(192,57,43,0.5)';
+      el.style.color = 'var(--white)';
+    }
+    el.textContent = text;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return el;
+  }
+  function clearInlineMessage() {
+    document.getElementById('checkout-msg')?.remove();
+  }
+
+  function setSubmitting(busy) {
+    if (!submitBtn) return;
+    submitBtn.disabled = busy;
+    if (submitLabel) submitLabel.textContent = busy ? 'Placing order…' : ORIGINAL_LABEL;
+  }
+
+  form?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (inFlight) return; // double-click guard
 
     const name    = document.getElementById('full-name').value.trim();
     const phone   = document.getElementById('phone').value.trim();
     const address = document.getElementById('address').value.trim();
     const town    = document.getElementById('town').value;
+    const notes   = document.getElementById('notes').value.trim();
 
     const fields = [
       ['full-name', name],
@@ -305,9 +356,79 @@
 
     if (!valid) return;
 
-    // TODO: submit order (WhatsApp message or Netlify function)
-    // For now, navigate to confirmation or show a placeholder
-    alert(`Order received!\n\nWe'll contact you on WhatsApp at ${phone} to confirm delivery.`);
+    const cart = getCart();
+    if (cart.length === 0) {
+      window.location.href = 'cart.html';
+      return;
+    }
+
+    const subtotal = getSubtotal(cart);
+    const delivery = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
+    const total    = subtotal + delivery;
+
+    const payload = {
+      customer: { name, phone, address, town, notes },
+      // Strip cart-internal fields (`key`, `image`) — server doesn't need them.
+      cart: cart.map(i => ({ id: i.id, name: i.name, size: i.size, qty: i.qty, price: i.price })),
+      totals: { subtotal, delivery, total },
+    };
+
+    inFlight = true;
+    setSubmitting(true);
+    clearInlineMessage();
+
+    try {
+      const res = await fetch(PLACE_ORDER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      // Partial failure: some lines succeeded, some didn't. Prune the
+      // succeeded ones from the local cart so a retry doesn't double-debit.
+      if (res.status === 207 || (res.ok && Array.isArray(data.results) && data.results.some(r => !r.ok))) {
+        const succeededIds = new Set((data.results || []).filter(r => r.ok).map(r => r.id));
+        if (succeededIds.size > 0) {
+          const remaining = cart.filter(i => !succeededIds.has(i.id));
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(remaining));
+          updateBadge();
+          renderSummary();
+        }
+        const failures = (data.results || []).filter(r => !r.ok)
+          .map(r => `• ${r.name || r.id}: ${r.error}`)
+          .join('\n');
+        showInlineMessage('error',
+          `Some items couldn't be reserved:\n${failures}\n\n` +
+          (succeededIds.size > 0
+            ? 'The items that succeeded have been removed from your cart. Adjust the rest and try again.'
+            : 'No items were reserved. Adjust your cart and try again.')
+        );
+        return;
+      }
+
+      if (!res.ok) {
+        showInlineMessage('error', data.error || `Order failed (HTTP ${res.status}). Please try again.`);
+        return;
+      }
+
+      // Full success: clear cart, show confirmation, hide form.
+      localStorage.removeItem(STORAGE_KEY);
+      updateBadge();
+      const ref = data.orderRef || '';
+      form.style.display = 'none';
+      showInlineMessage('success',
+        `Order received${ref ? ` (ref ${ref})` : ''}.\n` +
+        `We'll contact you on WhatsApp at ${phone} to confirm delivery.`
+      );
+    } catch (err) {
+      showInlineMessage('error',
+        'Network error — please check your connection and try again.'
+      );
+    } finally {
+      inFlight = false;
+      setSubmitting(false);
+    }
   });
 
   updateBadge();

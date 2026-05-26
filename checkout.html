@@ -106,36 +106,36 @@
           </div>
         </div>
 
-        <!-- Payment -->
+        <!-- Payment Method -->
         <div class="form-section">
-          <div class="form-section__title">Payment</div>
-          <div class="payment-placeholder">
-            <div class="payment-placeholder__icon">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="22" height="22">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/>
-              </svg>
-            </div>
-            <div>
-              <div class="payment-placeholder__label">Online Payment</div>
-              <div class="payment-placeholder__sub">WiPay card payment coming soon</div>
-            </div>
-            <div class="payment-placeholder__badge">Coming Soon</div>
+          <div class="form-section__title">Payment Method</div>
+          <p class="pay-options__hint">Choose how you'd like to pay. You'll get instructions after placing your order — no card details are collected on this site.</p>
+          <div class="pay-options" role="radiogroup" aria-label="Payment method">
+
+            <label class="pay-option">
+              <input type="radio" name="payMethod" value="cod" checked>
+              <span class="pay-option__body">
+                <span class="pay-option__label">Pay on Delivery</span>
+                <span class="pay-option__sub">Cash or card when your order arrives.</span>
+              </span>
+            </label>
+
+            <label class="pay-option">
+              <input type="radio" name="payMethod" value="bank-ig">
+              <span class="pay-option__body">
+                <span class="pay-option__label">Online Bank Transfer</span>
+                <span class="pay-option__sub">Transfer the total, then send your receipt to our Instagram.</span>
+              </span>
+            </label>
+
           </div>
-          <button type="button" class="wipay-btn" disabled aria-disabled="true">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="16" height="16">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/>
-            </svg>
-            Pay with WiPay
-            <span class="wipay-btn__badge">Coming Soon</span>
-          </button>
         </div>
 
         <!-- Actions -->
         <div class="form-actions">
           <button type="submit" class="btn-gold" id="place-order-btn">
-            <span>Place Order (Pay on WhatsApp)</span>
+            <span>Place Order</span>
           </button>
-          <!-- TODO: replace btn-gold above with WiPay payment once integrated -->
           <a href="cart.html" class="btn-outline" style="text-align:center;justify-content:center">
             <span>← Back to Cart</span>
           </a>
@@ -164,6 +164,38 @@
         </p>
       </aside>
 
+    </div>
+
+    <!-- ── Confirmation (revealed after a successful order) ──── -->
+    <div id="confirm-panel" class="confirm-panel" hidden>
+      <div class="confirm__icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+        </svg>
+      </div>
+      <h2 class="confirm-panel__title" id="confirm-title">Thank you!</h2>
+      <p class="confirm-panel__ref">Confirmation <strong id="confirm-ref"></strong></p>
+      <p class="confirm-panel__lead" id="confirm-lead"></p>
+
+      <!-- Bank details (shown for the online-transfer method) -->
+      <div class="bank-details" id="confirm-bank" hidden>
+        <div class="bank-details__title">Bank Transfer Details</div>
+        <dl class="bank-details__list">
+          <div class="bank-details__row"><dt>Bank</dt><dd id="bank-name"></dd></div>
+          <div class="bank-details__row"><dt>Account Name</dt><dd id="bank-account-name"></dd></div>
+          <div class="bank-details__row"><dt>Account No.</dt><dd id="bank-account-number"></dd></div>
+          <div class="bank-details__row"><dt>Account Type</dt><dd id="bank-account-type"></dd></div>
+          <div class="bank-details__row"><dt>Amount</dt><dd id="bank-amount"></dd></div>
+        </dl>
+        <p class="bank-details__note">Please send a screenshot of the payment receipt to our Instagram <strong id="bank-ig-handle"></strong> when completed, quoting your confirmation <strong id="bank-ref"></strong>.</p>
+      </div>
+
+      <!-- Instagram CTA (bank-ig) -->
+      <a class="btn-gold confirm-cta" id="confirm-ig" href="#" target="_blank" rel="noopener" hidden>
+        <span>Send receipt on Instagram</span>
+      </a>
+
+      <a href="catalogue.html" class="btn-outline confirm-cta"><span>← Continue Shopping</span></a>
     </div>
   </div>
 </main>
@@ -222,6 +254,15 @@
   const STORAGE_KEY = 'rc868_cart';
   const DELIVERY_FEE = 50;
   const FREE_DELIVERY_THRESHOLD = 500;
+
+  // ── Payment instructions config (display-only; no card details collected here) ──
+  const BANK_DETAILS = {
+    bank:          'Republic Bank',
+    accountName:   'Jesse Hospedales',
+    accountNumber: '340061150001',
+    accountType:   'Checking Account',
+  };
+  const INSTAGRAM_HANDLE = 'retrocloset868';
 
   function getCart() {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
@@ -412,15 +453,12 @@
         return;
       }
 
-      // Full success: clear cart, show confirmation, hide form.
+      // Full success: clear cart, reveal the method-specific confirmation.
       localStorage.removeItem(STORAGE_KEY);
       updateBadge();
-      const ref = data.orderRef || '';
-      form.style.display = 'none';
-      showInlineMessage('success',
-        `Order received${ref ? ` (ref ${ref})` : ''}.\n` +
-        `We'll contact you on WhatsApp at ${phone} to confirm delivery.`
-      );
+      clearInlineMessage();
+      const method = form.querySelector('input[name="payMethod"]:checked')?.value || 'cod';
+      renderConfirmation(method, { ref: data.orderRef || '', name, phone, total });
     } catch (err) {
       showInlineMessage('error',
         'Network error — please check your connection and try again.'
@@ -430,6 +468,50 @@
       setSubmitting(false);
     }
   });
+
+  // ── Confirmation: reveal the panel + the bits relevant to the chosen method ──
+  function fmtTTD(n) { return `TTD $${Number(n).toLocaleString()}`; }
+
+  function renderConfirmation(method, { ref, name, phone, total }) {
+    const layout = document.querySelector('.checkout-layout');
+    const panel  = document.getElementById('confirm-panel');
+    if (!panel) return;
+    if (layout) layout.style.display = 'none';
+
+    const firstName = (name || '').trim().split(/\s+/)[0] || 'there';
+    document.getElementById('confirm-title').textContent = `Thank you, ${firstName}!`;
+    document.getElementById('confirm-ref').textContent = ref || '—';
+
+    const bank = document.getElementById('confirm-bank');
+    const ig   = document.getElementById('confirm-ig');
+    const lead = document.getElementById('confirm-lead');
+
+    // Start with the optional blocks hidden; switch on the chosen method.
+    bank.hidden = ig.hidden = true;
+
+    if (method === 'bank-ig') {
+      lead.textContent =
+        'Your order is confirmed. For online transfers, kindly transfer the total cost to the following bank account:';
+      bank.hidden = false;
+      document.getElementById('bank-name').textContent           = BANK_DETAILS.bank;
+      document.getElementById('bank-account-name').textContent   = BANK_DETAILS.accountName;
+      document.getElementById('bank-account-number').textContent = BANK_DETAILS.accountNumber;
+      document.getElementById('bank-account-type').textContent   = BANK_DETAILS.accountType;
+      document.getElementById('bank-amount').textContent         = fmtTTD(total);
+      document.getElementById('bank-ref').textContent            = ref || '—';
+      document.getElementById('bank-ig-handle').textContent      = `@${INSTAGRAM_HANDLE}`;
+      ig.hidden = false;
+      ig.href = `https://instagram.com/${INSTAGRAM_HANDLE}`;
+    } else {
+      // Pay on delivery
+      lead.textContent =
+        `Your order is confirmed. Pay with cash or card when your order arrives. ` +
+        `We'll message you on WhatsApp at ${phone} to arrange delivery.`;
+    }
+
+    panel.hidden = false;
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
   updateBadge();
   renderSummary();

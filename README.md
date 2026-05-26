@@ -103,6 +103,20 @@ HTTP status: `200` if every line succeeded, `207 Multi-Status` if any failed. Th
 | `/api/get-products` | GET | — | `{ products: [{ id, name, league, price, sizes, inStock, imageFront, imageBack, badge, description, stockQuantity }] }` |
 | `/api/place-order`  | POST | `{ customer, cart, totals }` (see Sync contract) | `{ orderRef, customer, totals, results }` |
 
+## Checkout payment options
+
+`checkout.html` does **not** process card payments. After `/api/place-order` reserves
+stock, the customer picks one of two methods and sees a matching confirmation panel:
+
+| Method | What the customer sees |
+| --- | --- |
+| **Pay on Delivery** | "Your order is confirmed. Pay cash or card when your order arrives; we'll WhatsApp you to arrange delivery." |
+| **Online Bank Transfer** | Bank transfer details + amount + confirmation ref, and a note/button to send the payment receipt to Instagram. |
+
+The bank details and Instagram handle are plain constants at the top of the inline
+`<script>` in `checkout.html` (`BANK_DETAILS`, `INSTAGRAM_HANDLE`) — display-only, no
+secrets. Update them there if the account or handle changes.
+
 ## Deploy
 
 Push to `main` → Netlify auto-deploys. `AIRTABLE_API_KEY` must be set in the Netlify site's **Site settings → Environment variables**.

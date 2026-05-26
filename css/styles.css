@@ -1722,6 +1722,132 @@ body::before {
 .confirm__actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
 
 /* ============================================================
+   PAYMENT METHOD OPTIONS + POST-ORDER CONFIRMATION (checkout)
+   ============================================================ */
+/* The confirmation CTAs use .btn-gold/.btn-outline (display:flex), which would
+   otherwise override the [hidden] attribute's default display:none. Make the
+   attribute authoritative so JS toggling of hidden actually hides them. */
+[hidden] { display: none !important; }
+
+.pay-options__hint {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--white-dim);
+  margin-bottom: 1.25rem;
+}
+.pay-options { display: flex; flex-direction: column; gap: 0.75rem; }
+.pay-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+}
+.pay-option:hover { border-color: var(--gold-dim); }
+.pay-option input {
+  accent-color: var(--gold);
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+}
+.pay-option:has(input:checked) { border-color: var(--gold); background: var(--gold-muted); }
+.pay-option__body { display: flex; flex-direction: column; gap: 0.2rem; }
+.pay-option__label {
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--white);
+}
+.pay-option__sub {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  color: var(--white-dim);
+  line-height: 1.4;
+}
+
+.confirm-panel { max-width: 600px; margin: 0 auto; text-align: center; padding: 1rem 0 3rem; }
+.confirm-panel__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  font-weight: 300;
+  margin-bottom: 0.5rem;
+}
+.confirm-panel__ref {
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  color: var(--white-dim);
+  margin-bottom: 1.25rem;
+}
+.confirm-panel__ref strong { color: var(--gold); letter-spacing: 0.1em; }
+.confirm-panel__lead {
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--white);
+  margin-bottom: 1.75rem;
+}
+.confirm-cta { width: 100%; justify-content: center; margin-bottom: 0.85rem; }
+
+.bank-details {
+  background: var(--surface);
+  border: 1px solid var(--gold-dim);
+  border-radius: 2px;
+  padding: 1.5rem;
+  margin-bottom: 1.75rem;
+  text-align: left;
+}
+.bank-details__title {
+  font-family: var(--font-ui);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 1rem;
+}
+.bank-details__list { margin: 0; }
+.bank-details__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.bank-details__row:last-child { border-bottom: none; }
+.bank-details__row dt {
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--white-dim);
+}
+.bank-details__row dd {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  color: var(--white);
+  text-align: right;
+  word-break: break-word;
+}
+.bank-details__note {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  color: var(--white-dim);
+  line-height: 1.5;
+  margin-top: 1rem;
+}
+.bank-details__note strong { color: var(--gold); letter-spacing: 0.08em; }
+
+/* ============================================================
    EMPTY & ERROR STATES
    ============================================================ */
 .empty-state {

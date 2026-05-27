@@ -147,9 +147,27 @@
       <aside class="cart-summary checkout-summary" id="order-summary">
         <div class="cart-summary__title">Order Summary</div>
         <div id="summary-items" style="margin-bottom:1rem"></div>
+
+        <!-- Discount code -->
+        <div class="discount-entry">
+          <label class="discount-entry__label" for="discount-code">Discount Code</label>
+          <div class="discount-entry__row">
+            <input type="text" id="discount-code" name="discount-code" placeholder="Enter code"
+                   autocomplete="off" autocapitalize="characters" spellcheck="false">
+            <button type="button" class="btn-outline discount-entry__btn" id="apply-discount">
+              <span>Apply</span>
+            </button>
+          </div>
+          <p class="discount-entry__msg" id="discount-msg" hidden></p>
+        </div>
+
         <div class="cart-summary__row">
           <span>Subtotal</span>
           <span id="summary-subtotal">TTD $0</span>
+        </div>
+        <div class="cart-summary__row cart-summary__row--discount" id="summary-discount-row" hidden>
+          <span id="summary-discount-label">Discount</span>
+          <span id="summary-discount">−TTD $0</span>
         </div>
         <div class="cart-summary__row">
           <span>Delivery</span>
@@ -255,6 +273,11 @@
   const DELIVERY_FEE = 50;
   const FREE_DELIVERY_THRESHOLD = 500;
 
+  // Discount codes → flat TTD off the subtotal (delivery unchanged). The
+  // server re-validates and is the source of truth; this is just for UX.
+  const DISCOUNT_CODES = { RC868X7: 50 };
+  let appliedCode = null; // uppercased code string once successfully applied
+
   // ── Payment instructions config (display-only; no card details collected here) ──
   const BANK_DETAILS = {
     bank:          'Republic Bank',
@@ -271,6 +294,17 @@
 
   function getSubtotal(cart) { return cart.reduce((s, i) => s + i.price * i.qty, 0); }
   function getCount(cart) { return cart.reduce((s, i) => s + i.qty, 0); }
+
+  // Single source of order math, shared by the summary and the submit handler.
+  // Discount comes off the subtotal (capped at it); delivery is based on the
+  // pre-discount subtotal so a code can't unlock free delivery.
+  function computeTotals(cart) {
+    const subtotal = getSubtotal(cart);
+    const discount = appliedCode ? Math.min(DISCOUNT_CODES[appliedCode], subtotal) : 0;
+    const delivery = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
+    const total = subtotal - discount + delivery;
+    return { subtotal, discount, delivery, total };
+  }
 
   function updateBadge() {
     const c = getCount(getCart());
@@ -289,20 +323,29 @@
       return;
     }
 
-    const subtotal = getSubtotal(cart);
-    const delivery = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
-    const total = subtotal + delivery;
+    const { subtotal, discount, delivery, total } = computeTotals(cart);
 
     const itemsEl    = document.getElementById('summary-items');
     const subtotalEl = document.getElementById('summary-subtotal');
     const deliveryEl = document.getElementById('summary-delivery');
     const totalEl    = document.getElementById('summary-total');
     const freeNote   = document.getElementById('summary-free-note');
+    const discountRow = document.getElementById('summary-discount-row');
+    const discountLabel = document.getElementById('summary-discount-label');
+    const discountEl  = document.getElementById('summary-discount');
 
     if (subtotalEl) subtotalEl.textContent = `TTD $${subtotal.toLocaleString()}`;
     if (deliveryEl) deliveryEl.textContent = delivery === 0 ? 'FREE' : `TTD $${DELIVERY_FEE}`;
     if (totalEl) totalEl.textContent = `TTD $${total.toLocaleString()}`;
     if (freeNote) freeNote.style.display = delivery === 0 ? 'block' : 'none';
+
+    if (discountRow) {
+      discountRow.hidden = discount <= 0;
+      if (discount > 0) {
+        if (discountLabel) discountLabel.textContent = `Discount (${appliedCode})`;
+        if (discountEl) discountEl.textContent = `−TTD $${discount.toLocaleString()}`;
+      }
+    }
 
     if (itemsEl) {
       itemsEl.innerHTML = cart.map(item => `
@@ -403,9 +446,7 @@
       return;
     }
 
-    const subtotal = getSubtotal(cart);
-    const delivery = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
-    const total    = subtotal + delivery;
+    const { subtotal, delivery, total } = computeTotals(cart);
 
     const payMethod = form.querySelector('input[name="payMethod"]:checked')?.value || 'cod';
 
@@ -415,6 +456,7 @@
       cart: cart.map(i => ({ id: i.id, name: i.name, size: i.size, qty: i.qty, price: i.price })),
       totals: { subtotal, delivery, total },
       payment: payMethod,
+      discountCode: appliedCode || '',
     };
 
     inFlight = true;
@@ -514,6 +556,41 @@
     panel.hidden = false;
     panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
+
+  // ── Discount code ───────────────────────────────────────────
+  const discountInput = document.getElementById('discount-code');
+  const applyBtn      = document.getElementById('apply-discount');
+  const discountMsg   = document.getElementById('discount-msg');
+
+  function showDiscountMsg(kind, text) {
+    if (!discountMsg) return;
+    discountMsg.hidden = false;
+    discountMsg.setAttribute('data-kind', kind); // 'ok' | 'err'
+    discountMsg.textContent = text;
+  }
+
+  function applyDiscount() {
+    const raw = (discountInput?.value || '').trim().toUpperCase();
+    if (!raw) {
+      appliedCode = null;
+      showDiscountMsg('err', 'Enter a code first.');
+      renderSummary();
+      return;
+    }
+    if (DISCOUNT_CODES[raw] != null) {
+      appliedCode = raw;
+      showDiscountMsg('ok', `Code applied — TTD $${DISCOUNT_CODES[raw]} off.`);
+    } else {
+      appliedCode = null;
+      showDiscountMsg('err', "That code isn't valid.");
+    }
+    renderSummary();
+  }
+
+  applyBtn?.addEventListener('click', applyDiscount);
+  discountInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); applyDiscount(); }
+  });
 
   updateBadge();
   renderSummary();

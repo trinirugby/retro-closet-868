@@ -42,6 +42,22 @@ const PAYMENT_LABELS = {
   'bank-ig': 'Online Bank Transfer',
 };
 
+// Discount codes → flat TTD amount off the subtotal. Reusable, no expiry.
+// Server-side is the source of truth: the client can request a code but the
+// amount is decided here, so totals can't be tampered with.
+const DISCOUNT_CODES = {
+  RC868X7: 50,
+};
+
+/** Resolves a (possibly missing) client code to an authoritative discount,
+ *  capped so it never exceeds the subtotal. Returns { code, amount }. */
+function resolveDiscount(rawCode, subtotal) {
+  const code = (rawCode ?? '').toString().trim().toUpperCase();
+  const value = DISCOUNT_CODES[code];
+  if (value == null) return { code: '', amount: 0 };
+  return { code, amount: Math.min(value, Math.max(0, subtotal)) };
+}
+
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type',
@@ -107,6 +123,14 @@ function validateOrder(body) {
   // payment is optional for backward compatibility; default applied later.
   if (body.payment != null && !(body.payment in PAYMENT_LABELS)) {
     return `payment must be one of: ${Object.keys(PAYMENT_LABELS).join(', ')}`;
+  }
+
+  // discountCode is optional; just bound the type/length. An unknown code is
+  // not an error — it simply yields no discount (resolveDiscount handles it).
+  if (body.discountCode != null) {
+    if (typeof body.discountCode !== 'string' || body.discountCode.length > 40) {
+      return 'discountCode must be a string up to 40 chars';
+    }
   }
 
   return null;
@@ -272,6 +296,12 @@ exports.handler = async (event) => {
   // was reserved — a fully-failed attempt sold nothing. A write failure here
   // must NOT fail the response: stock is already committed, so we log and move
   // on rather than telling the customer their paid-for order failed.
+  // Discount is resolved server-side from the code (authoritative amount),
+  // then the order total is recomputed so it always reflects the real
+  // discount regardless of what the client submitted.
+  const discount = resolveDiscount(body.discountCode, totals.subtotal);
+  const recordedTotal = totals.subtotal - discount.amount + totals.delivery;
+
   if (anyOk) {
     const paymentLabel = PAYMENT_LABELS[body.payment] || PAYMENT_LABELS.cod;
     try {
@@ -288,8 +318,10 @@ exports.handler = async (event) => {
           'Payment Method': paymentLabel,
           Items: summariseItems(results),
           Subtotal: totals.subtotal,
+          'Discount Code': discount.code,
+          Discount: discount.amount,
           Delivery: totals.delivery,
-          Total: totals.total,
+          Total: recordedTotal,
           Status: 'New',
         },
         AbortSignal.timeout(ORDER_WRITE_TIMEOUT_MS),
@@ -304,14 +336,22 @@ exports.handler = async (event) => {
   // Whole-order log (full audit trail, including failed lines).
   console.log(
     '[place-order]',
-    JSON.stringify({ orderRef, customer, payment: body.payment || 'cod', totals, results }),
+    JSON.stringify({
+      orderRef,
+      customer,
+      payment: body.payment || 'cod',
+      discount,
+      totals: { ...totals, total: recordedTotal },
+      results,
+    }),
   );
 
   const anyFail = results.some((r) => !r.ok);
   return json(anyFail ? 207 : 200, {
     orderRef,
     customer,
-    totals,
+    discount,
+    totals: { ...totals, total: recordedTotal },
     results,
   });
 };

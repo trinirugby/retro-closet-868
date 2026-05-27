@@ -1,28 +1,29 @@
 /* ============================================================
-   PLACE-ORDER.JS — Storefront → Dashboard order webhook
+   PLACE-ORDER.JS — Storefront order handler (Airtable write-through)
 
    Called by the inline submit handler in `checkout.html`. For each
-   cart line, reads the current Airtable record, then PATCHes the
-   sister dashboard (`trinirugby/Retro-Closet-Dashboard`) so stock
-   decrements and (if stock hits 0) `in_stock` is flipped to false in
-   the same atomic write — keeping the storefront's `{in_stock}=TRUE()`
-   filter and the dashboard's view of stock in sync without manual
-   intervention.
+   cart line, reads the current Airtable record, then PATCHes Airtable
+   directly so stock decrements and (if stock hits 0) `in_stock` is
+   flipped to false in the same write — keeping the storefront's
+   `{in_stock}=TRUE()` filter in sync without manual intervention.
 
-   The dashboard's PATCH validation (`app/api/products/[id]/route.ts`)
-   is the contract surface. If that whitelist changes, mirror the
-   change here in the same PR.
+   History: writes used to go through the sister dashboard
+   (`trinirugby/Retro-Closet-Dashboard` on Railway). That service was
+   decommissioned (Railway returns 404 "Application not found"), which
+   broke checkout, so the storefront now writes straight to Airtable.
+   `AIRTABLE_API_KEY` already carries `data.records:write` scope. If the
+   dashboard is ever redeployed it reads/writes the same base, so the
+   two stay consistent.
 
    v1 limitations (documented in README, not fixed here):
    • Read-modify-write race: two simultaneous buyers of the last
      unit can both succeed, leaving units_sold > initial_stock.
-     Low-volume retail; seller reconciles via the dashboard.
+     Low-volume retail; seller reconciles in Airtable.
    • No orders table — the audit trail is Netlify function logs.
    ============================================================ */
 
 const BASE_ID = 'appcA2sFnpO4O9x7N';
 const TABLE_ID = 'tblWjg7NqsZvK0otW';
-const DASHBOARD_BASE = 'https://retrocloset-production.up.railway.app';
 
 const MAX_LINES = 25;
 const PER_LINE_TIMEOUT_MS = 6_000;
@@ -118,19 +119,23 @@ async function fetchRecord(apiKey, id, signal) {
   };
 }
 
-// ── Dashboard PATCH ─────────────────────────────────────────
-async function patchDashboard(id, payload, signal) {
-  const res = await fetch(`${DASHBOARD_BASE}/api/products/${id}`, {
+// ── Airtable PATCH (direct write) ───────────────────────────
+async function patchAirtable(apiKey, id, fields, signal) {
+  const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}/${id}`;
+  const res = await fetch(url, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ fields }),
     signal,
   });
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new Error(`Dashboard PATCH ${res.status}: ${text.slice(0, 200)}`);
+    throw new Error(`Airtable write ${res.status}: ${text.slice(0, 200)}`);
   }
-  return res.json(); // { product: ... }
+  return res.json();
 }
 
 // ── Per-line worker ────────────────────────────────────────
@@ -157,10 +162,10 @@ async function processLine(apiKey, line) {
 
   const newStock = before.stock_quantity - line.qty;
   const newSold = before.units_sold + line.qty;
-  const payload = { stock_quantity: newStock, units_sold: newSold };
-  if (newStock === 0) payload.in_stock = false;
+  const fields = { stock_quantity: newStock, units_sold: newSold };
+  if (newStock === 0) fields.in_stock = false;
 
-  await patchDashboard(line.id, payload, ctrl);
+  await patchAirtable(apiKey, line.id, fields, ctrl);
 
   return {
     id: line.id,

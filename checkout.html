@@ -407,11 +407,14 @@
     const delivery = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
     const total    = subtotal + delivery;
 
+    const payMethod = form.querySelector('input[name="payMethod"]:checked')?.value || 'cod';
+
     const payload = {
       customer: { name, phone, address, town, notes },
       // Strip cart-internal fields (`key`, `image`) — server doesn't need them.
       cart: cart.map(i => ({ id: i.id, name: i.name, size: i.size, qty: i.qty, price: i.price })),
       totals: { subtotal, delivery, total },
+      payment: payMethod,
     };
 
     inFlight = true;
@@ -457,8 +460,7 @@
       localStorage.removeItem(STORAGE_KEY);
       updateBadge();
       clearInlineMessage();
-      const method = form.querySelector('input[name="payMethod"]:checked')?.value || 'cod';
-      renderConfirmation(method, { ref: data.orderRef || '', name, phone, total });
+      renderConfirmation(payMethod, { ref: data.orderRef || '', name, phone, total });
     } catch (err) {
       showInlineMessage('error',
         'Network error — please check your connection and try again.'

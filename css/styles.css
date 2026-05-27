@@ -1519,6 +1519,9 @@ body::before {
   display: grid;
   grid-template-columns: 1fr;
   gap: 1rem;
+  /* Align inputs along the bottom so columns line up even when one
+     field's label wraps to a second line (e.g. the phone hint). */
+  align-items: end;
 }
 @media (min-width: 640px) { .form-grid { grid-template-columns: 1fr 1fr; } }
 .form-grid--full { grid-template-columns: 1fr !important; }

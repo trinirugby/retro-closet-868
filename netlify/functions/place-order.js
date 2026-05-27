@@ -1,31 +1,46 @@
 /* ============================================================
-   PLACE-ORDER.JS — Storefront → Dashboard order webhook
+   PLACE-ORDER.JS — Storefront order handler (Airtable write-through)
 
    Called by the inline submit handler in `checkout.html`. For each
-   cart line, reads the current Airtable record, then PATCHes the
-   sister dashboard (`trinirugby/Retro-Closet-Dashboard`) so stock
-   decrements and (if stock hits 0) `in_stock` is flipped to false in
-   the same atomic write — keeping the storefront's `{in_stock}=TRUE()`
-   filter and the dashboard's view of stock in sync without manual
-   intervention.
+   cart line, reads the current Airtable record, then PATCHes Airtable
+   directly so stock decrements and (if stock hits 0) `in_stock` is
+   flipped to false in the same write — keeping the storefront's
+   `{in_stock}=TRUE()` filter in sync without manual intervention.
 
-   The dashboard's PATCH validation (`app/api/products/[id]/route.ts`)
-   is the contract surface. If that whitelist changes, mirror the
-   change here in the same PR.
+   History: writes used to go through the sister dashboard
+   (`trinirugby/Retro-Closet-Dashboard` on Railway). That service was
+   decommissioned (Railway returns 404 "Application not found"), which
+   broke checkout, so the storefront now writes straight to Airtable.
+   `AIRTABLE_API_KEY` already carries `data.records:write` scope. If the
+   dashboard is ever redeployed it reads/writes the same base, so the
+   two stay consistent.
+
+   After stock is committed, the order is also recorded as a row in
+   the Airtable `Orders` table (customer, items, totals, payment
+   method) so the seller has a proper order history, not just logs.
+   That write is best-effort: if it fails, stock is still committed
+   and the failure is logged for manual reconciliation.
 
    v1 limitations (documented in README, not fixed here):
    • Read-modify-write race: two simultaneous buyers of the last
      unit can both succeed, leaving units_sold > initial_stock.
-     Low-volume retail; seller reconciles via the dashboard.
-   • No orders table — the audit trail is Netlify function logs.
+     Low-volume retail; seller reconciles in Airtable.
    ============================================================ */
 
 const BASE_ID = 'appcA2sFnpO4O9x7N';
 const TABLE_ID = 'tblWjg7NqsZvK0otW';
-const DASHBOARD_BASE = 'https://retrocloset-production.up.railway.app';
+// Orders table — one record per placed order (audit trail for the seller).
+const ORDERS_TABLE_ID = 'tbl7mY2r8TUhWBVgE';
 
 const MAX_LINES = 25;
 const PER_LINE_TIMEOUT_MS = 6_000;
+const ORDER_WRITE_TIMEOUT_MS = 6_000;
+
+// Maps the checkout page's radio values to the Airtable singleSelect choices.
+const PAYMENT_LABELS = {
+  cod: 'Pay on Delivery',
+  'bank-ig': 'Online Bank Transfer',
+};
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -89,6 +104,11 @@ function validateOrder(body) {
     }
   }
 
+  // payment is optional for backward compatibility; default applied later.
+  if (body.payment != null && !(body.payment in PAYMENT_LABELS)) {
+    return `payment must be one of: ${Object.keys(PAYMENT_LABELS).join(', ')}`;
+  }
+
   return null;
 }
 
@@ -118,19 +138,50 @@ async function fetchRecord(apiKey, id, signal) {
   };
 }
 
-// ── Dashboard PATCH ─────────────────────────────────────────
-async function patchDashboard(id, payload, signal) {
-  const res = await fetch(`${DASHBOARD_BASE}/api/products/${id}`, {
+// ── Airtable PATCH (direct write) ───────────────────────────
+async function patchAirtable(apiKey, id, fields, signal) {
+  const url = `https://api.airtable.com/v0/${BASE_ID}/${TABLE_ID}/${id}`;
+  const res = await fetch(url, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ fields }),
     signal,
   });
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new Error(`Dashboard PATCH ${res.status}: ${text.slice(0, 200)}`);
+    throw new Error(`Airtable write ${res.status}: ${text.slice(0, 200)}`);
   }
-  return res.json(); // { product: ... }
+  return res.json();
+}
+
+// ── Airtable POST (create order record) ─────────────────────
+async function createOrder(apiKey, fields, signal) {
+  const url = `https://api.airtable.com/v0/${BASE_ID}/${ORDERS_TABLE_ID}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ fields, typecast: true }),
+    signal,
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`Airtable order write ${res.status}: ${text.slice(0, 200)}`);
+  }
+  return res.json();
+}
+
+// One human-readable line per successfully-reserved item.
+function summariseItems(results) {
+  return results
+    .filter((r) => r.ok)
+    .map((r) => `${r.requested}× ${r.name || r.id} @ TTD $${(r.price ?? 0).toLocaleString()}`)
+    .join('\n');
 }
 
 // ── Per-line worker ────────────────────────────────────────
@@ -157,15 +208,16 @@ async function processLine(apiKey, line) {
 
   const newStock = before.stock_quantity - line.qty;
   const newSold = before.units_sold + line.qty;
-  const payload = { stock_quantity: newStock, units_sold: newSold };
-  if (newStock === 0) payload.in_stock = false;
+  const fields = { stock_quantity: newStock, units_sold: newSold };
+  if (newStock === 0) fields.in_stock = false;
 
-  await patchDashboard(line.id, payload, ctrl);
+  await patchAirtable(apiKey, line.id, fields, ctrl);
 
   return {
     id: line.id,
     name: line.name || before.name,
     requested: line.qty,
+    price: line.price,
     before,
     after: { stock_quantity: newStock, units_sold: newSold },
     ok: true,
@@ -214,10 +266,45 @@ exports.handler = async (event) => {
     };
   });
 
-  // Whole-order log (audit trail until we add an Orders table).
+  const anyOk = results.some((r) => r.ok);
+
+  // Record the order in Airtable (best-effort). Only when at least one line
+  // was reserved — a fully-failed attempt sold nothing. A write failure here
+  // must NOT fail the response: stock is already committed, so we log and move
+  // on rather than telling the customer their paid-for order failed.
+  if (anyOk) {
+    const paymentLabel = PAYMENT_LABELS[body.payment] || PAYMENT_LABELS.cod;
+    try {
+      const order = await createOrder(
+        apiKey,
+        {
+          'Order Ref': orderRef,
+          'Placed At': new Date().toISOString(),
+          'Customer Name': customer.name,
+          Phone: customer.phone,
+          Address: customer.address,
+          Town: customer.town,
+          Notes: customer.notes || '',
+          'Payment Method': paymentLabel,
+          Items: summariseItems(results),
+          Subtotal: totals.subtotal,
+          Delivery: totals.delivery,
+          Total: totals.total,
+          Status: 'New',
+        },
+        AbortSignal.timeout(ORDER_WRITE_TIMEOUT_MS),
+      );
+      console.log('[place-order] order recorded', orderRef, order?.id || '');
+    } catch (err) {
+      // Surface loudly in logs so the seller can reconcile manually.
+      console.error('[place-order] ORDER RECORD FAILED', orderRef, err?.message || err);
+    }
+  }
+
+  // Whole-order log (full audit trail, including failed lines).
   console.log(
     '[place-order]',
-    JSON.stringify({ orderRef, customer, totals, results }),
+    JSON.stringify({ orderRef, customer, payment: body.payment || 'cod', totals, results }),
   );
 
   const anyFail = results.some((r) => !r.ok);

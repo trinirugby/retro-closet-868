@@ -2,7 +2,7 @@
 
 Public storefront for **Retro Closet 868** — retro football jerseys from Trinidad & Tobago. Static HTML/CSS/JS plus a small set of Netlify Functions for the Airtable-backed catalogue and checkout.
 
-Live: <https://retrocloset868.com> · Instagram: [@retrocloset868](https://instagram.com/retrocloset868)
+Live: <https://retrocloset.org> · Instagram: [@retrocloset868](https://instagram.com/retrocloset868)
 
 ## Stack
 

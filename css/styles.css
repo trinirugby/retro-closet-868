@@ -1476,6 +1476,49 @@ body::before {
   font-size: 1rem;
   font-weight: 700;
 }
+.cart-summary__row--discount span:last-child { color: #4ade80; }
+
+/* Discount code entry (checkout summary) */
+.discount-entry {
+  margin: 0 0 1rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.discount-entry__label {
+  display: block;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--white-dim);
+  margin-bottom: 0.5rem;
+}
+.discount-entry__row { display: flex; gap: 0.5rem; }
+.discount-entry__row input {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--white);
+  padding: 0.6rem 0.75rem;
+  border-radius: 6px;
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.discount-entry__row input::placeholder { color: var(--white-dim); text-transform: none; letter-spacing: 0; }
+.discount-entry__row input:focus { outline: none; border-color: var(--gold); }
+.discount-entry__btn { flex: 0 0 auto; padding: 0.6rem 1.1rem; font-size: 0.78rem; }
+.discount-entry__msg {
+  margin: 0.5rem 0 0;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+.discount-entry__msg[data-kind="ok"]  { color: #4ade80; }
+.discount-entry__msg[data-kind="err"] { color: #e05a4a; }
 .cart-summary__total-price {
   font-family: var(--font-display);
   font-size: 1.75rem;

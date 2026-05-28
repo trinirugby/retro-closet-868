@@ -2,7 +2,7 @@
    RETRO CLOSET 868 — Sovereign Dark Design System
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garant:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garant:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@300;400;500&display=swap');
 
 /* ── CSS Variables ─────────────────────────────────────────── */
 :root {
@@ -25,6 +25,7 @@
   --green:        #1a7a4a;
 
   --font-display: 'Cormorant Garant', Georgia, serif;
+  --font-logo:    'Cinzel', Georgia, serif;
   --font-ui:      'Barlow Condensed', sans-serif;
   --font-body:    'Barlow', sans-serif;
 
@@ -214,10 +215,10 @@ body::before {
   mix-blend-mode: screen;
 }
 .nav__logo-text {
-  font-family: var(--font-ui);
+  font-family: var(--font-logo);
   font-size: 1rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   line-height: 1.1;
 }
@@ -645,7 +646,8 @@ body::before {
   height: 100svh;
   min-height: 600px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  padding-top: calc(var(--nav-h) + 1.75rem);
   overflow: hidden;
 }
 .hero__bg {
@@ -708,6 +710,11 @@ body::before {
 }
 
 .hero__title {
+  /* Match the engraved serif used in the logo image (logo.png) */
+  font-family: var(--font-logo);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   margin-bottom: 1.5rem;
   opacity: 0;
   animation: fadeUp 0.8s ease 0.45s forwards;

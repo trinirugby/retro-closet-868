@@ -44,10 +44,10 @@
 <!-- Mobile menu -->
 <div class="nav__mobile" aria-hidden="true">
   <ul class="nav__mobile-links" role="list">
-    <li><a href="index.html" class="nav__mobile-link">Home <span class="text-gold">↗</span></a></li>
-    <li><a href="catalogue.html" class="nav__mobile-link">Catalogue <span class="text-gold">↗</span></a></li>
-    <li><a href="about.html" class="nav__mobile-link">About <span class="text-gold">↗</span></a></li>
-    <li><a href="cart.html" class="nav__mobile-link">Cart <span class="text-gold">↗</span></a></li>
+    <li><a href="index.html" class="nav__mobile-link">Home <img src="images/mobile-menu-arrow.png" alt="" class="nav__mobile-icon" width="48" height="48" aria-hidden="true" decoding="async"></a></li>
+    <li><a href="catalogue.html" class="nav__mobile-link">Catalogue <img src="images/mobile-menu-arrow.png" alt="" class="nav__mobile-icon" width="48" height="48" aria-hidden="true" decoding="async"></a></li>
+    <li><a href="about.html" class="nav__mobile-link">About <img src="images/mobile-menu-arrow.png" alt="" class="nav__mobile-icon" width="48" height="48" aria-hidden="true" decoding="async"></a></li>
+    <li><a href="cart.html" class="nav__mobile-link">Cart <img src="images/mobile-menu-arrow.png" alt="" class="nav__mobile-icon" width="48" height="48" aria-hidden="true" decoding="async"></a></li>
   </ul>
 </div>
 
@@ -87,7 +87,8 @@
 
 <!-- ── Hero ──────────────────────────────────────────────── -->
 <section class="hero" id="hero">
-  <video class="hero__bg" autoplay muted loop playsinline>
+  <div class="hero__poster" aria-hidden="true"></div>
+  <video class="hero__bg" id="hero-video" autoplay muted loop playsinline preload="auto" disablepictureinpicture>
     <source src="images/hero-video.mp4" type="video/mp4">
   </video>
   <div class="hero__overlay"></div>
@@ -322,6 +323,50 @@
   }
 
   loadFeatured();
+
+  // Keep the hero video playing on mobile. iOS Low Power Mode blocks autoplay
+  // even for muted video and forces an un-hideable play button onto the <video>.
+  // We keep the video transparent (poster shows instead) and only reveal it once
+  // playback has genuinely started — so that play button is never seen.
+  (function keepHeroVideoPlaying() {
+    const video = document.getElementById('hero-video');
+    if (!video) return;
+
+    const reveal = () => video.classList.add('is-playing');
+
+    const tryPlay = () => {
+      const p = video.play();
+      // Only hide if we've NEVER managed to play yet (initial autoplay block).
+      // Once revealed, a pause/resume from scrolling must not flash the poster.
+      if (p && typeof p.then === 'function') {
+        p.then(reveal).catch(() => {
+          if (!video.classList.contains('is-playing')) video.classList.remove('is-playing');
+        });
+      }
+    };
+
+    // 'playing' fires whenever real playback (re)starts — the reliable reveal cue.
+    video.addEventListener('playing', reveal);
+    video.addEventListener('pause', tryPlay);
+
+    tryPlay();
+    video.addEventListener('loadeddata', tryPlay);
+    video.addEventListener('canplay', tryPlay);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) tryPlay();
+    });
+
+    // Low Power Mode only allows playback after a user gesture — resume on the first one.
+    const resumeOnce = () => {
+      tryPlay();
+      ['touchstart', 'click', 'scroll'].forEach(evt =>
+        document.removeEventListener(evt, resumeOnce)
+      );
+    };
+    ['touchstart', 'click', 'scroll'].forEach(evt =>
+      document.addEventListener(evt, resumeOnce, { passive: true })
+    );
+  })();
 </script>
 </body>
 </html>

@@ -88,15 +88,19 @@ export function showToast(message) {
 }
 
 // ── Hero parallax ───────────────────────────────────────────
-const heroBg = document.querySelector('.hero__bg');
-if (heroBg) {
+// Move the video and its poster still together so they never drift apart.
+const heroLayers = [
+  document.querySelector('.hero__bg'),
+  document.querySelector('.hero__poster'),
+].filter(Boolean);
+if (heroLayers.length) {
+  let ticking = false;
+  const applyParallax = () => {
+    const t = `scale(1.05) translateY(${window.scrollY * 0.3}px)`;
+    heroLayers.forEach(el => { el.style.transform = t; });
+    ticking = false;
+  };
   window.addEventListener('scroll', () => {
-    const y = window.scrollY;
-    heroBg.style.transform = `scale(1) translateY(${y * 0.3}px)`;
+    if (!ticking) { ticking = true; requestAnimationFrame(applyParallax); }
   }, { passive: true });
-
-  // Trigger loaded class for scale animation
-  window.addEventListener('load', () => {
-    document.querySelector('.hero')?.classList.add('loaded');
-  });
 }

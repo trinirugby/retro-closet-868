@@ -356,6 +356,20 @@ body::before {
   justify-content: space-between;
 }
 .nav__mobile-link:hover { color: var(--gold); padding-left: 0.5rem; }
+.nav__mobile-icon {
+  flex: 0 0 2.65rem;
+  width: 2.65rem;
+  height: 2.65rem;
+  object-fit: contain;
+  opacity: 0.94;
+  filter: drop-shadow(0 0 10px rgba(201,168,76,0.16));
+  transition: transform var(--transition), opacity var(--transition), filter var(--transition);
+}
+.nav__mobile-link:hover .nav__mobile-icon {
+  opacity: 1;
+  transform: translate(2px, -2px);
+  filter: drop-shadow(0 0 14px rgba(201,168,76,0.26));
+}
 
 /* ============================================================
    FOOTER
@@ -650,6 +664,15 @@ body::before {
   padding-top: calc(var(--nav-h) + 1.75rem);
   overflow: hidden;
 }
+/* Still frame shown behind the video. iOS Low Power Mode blocks autoplay and
+   forces an (un-hideable) play button onto the <video>; keeping the video itself
+   transparent until it truly plays hides that button — only this poster shows. */
+.hero__poster {
+  position: absolute;
+  inset: 0;
+  background: url('../images/hero-poster.jpg') center / cover no-repeat var(--bg);
+  transform: scale(1.05);
+}
 .hero__bg {
   position: absolute;
   inset: 0;
@@ -657,10 +680,14 @@ body::before {
   height: 100%;
   object-fit: cover;
   object-position: center;
+  opacity: 0;
   transform: scale(1.05);
-  transition: transform 8s ease;
+  transition: opacity 0.8s ease;
 }
-.hero.loaded .hero__bg { transform: scale(1); }
+/* Revealed by JS only once playback has actually started — so the play button
+   (which lives on the video element) is never visible. The poster sits behind
+   it and shares the same transform, so the swap is seamless. */
+.hero__bg.is-playing { opacity: 1; }
 .hero__overlay {
   position: absolute;
   inset: 0;
@@ -741,6 +768,21 @@ body::before {
   flex-wrap: wrap;
   opacity: 0;
   animation: fadeUp 0.8s ease 0.8s forwards;
+}
+
+/* Mobile: drop the hero logo image and let the title fill that space */
+@media (max-width: 767px) {
+  .hero__logo-wrap { display: none; }
+  .hero__title { font-size: clamp(3.5rem, 14vw, 6rem); }
+
+  /* Move the "Est. 868" label below the title */
+  .hero__content { display: flex; flex-direction: column; align-items: flex-start; }
+  .hero__title { order: 1; margin-bottom: 1rem; }
+  .hero__label { order: 2; margin-bottom: 1.5rem; }
+  .hero__sub   { order: 3; }
+  /* Re-add the space the logo used to occupy below the subheading so the
+     buttons stay exactly where they were (don't creep up) */
+  .hero__cta   { order: 4; margin-top: 7.25rem; }
 }
 
 /* ============================================================

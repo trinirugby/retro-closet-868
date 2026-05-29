@@ -104,3 +104,39 @@ if (heroLayers.length) {
     if (!ticking) { ticking = true; requestAnimationFrame(applyParallax); }
   }, { passive: true });
 }
+
+// ── Touch-to-flip product images ────────────────────────────
+// Touch & hold a jersey image to flip to the back; lift to flip front.
+// While scrolling, each image under the finger flips in turn. Listeners are
+// passive and never preventDefault, so vertical scrolling is fully preserved.
+// Delegated on document so it works for cards rendered after the async fetch.
+let flippedCard = null;
+
+function flipElFromPoint(x, y) {
+  return document.elementFromPoint(x, y)?.closest('.product-card__flip') || null;
+}
+
+function setFlipped(el) {
+  if (el === flippedCard) return;
+  if (flippedCard) flippedCard.classList.remove('is-flipped');
+  if (el) el.classList.add('is-flipped');
+  flippedCard = el;
+}
+
+function clearFlipped() {
+  if (flippedCard) flippedCard.classList.remove('is-flipped');
+  flippedCard = null;
+}
+
+document.addEventListener('touchstart', (e) => {
+  const t = e.touches[0];
+  if (t) setFlipped(flipElFromPoint(t.clientX, t.clientY));
+}, { passive: true });
+
+document.addEventListener('touchmove', (e) => {
+  const t = e.touches[0];
+  if (t) setFlipped(flipElFromPoint(t.clientX, t.clientY));
+}, { passive: true });
+
+document.addEventListener('touchend', clearFlipped, { passive: true });
+document.addEventListener('touchcancel', clearFlipped, { passive: true });

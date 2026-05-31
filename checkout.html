@@ -75,6 +75,12 @@
               </label>
               <input type="tel" id="phone" name="phone" placeholder="e.g. 868-XXX-XXXX" required autocomplete="tel">
             </div>
+            <div class="form-field">
+              <label for="email">
+                Email <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span>
+              </label>
+              <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email">
+            </div>
           </div>
         </div>
 
@@ -416,6 +422,7 @@
 
     const name    = document.getElementById('full-name').value.trim();
     const phone   = document.getElementById('phone').value.trim();
+    const email   = document.getElementById('email').value.trim();
     const address = document.getElementById('address').value.trim();
     const town    = document.getElementById('town').value;
     const notes   = document.getElementById('notes').value.trim();
@@ -451,7 +458,7 @@
     const payMethod = form.querySelector('input[name="payMethod"]:checked')?.value || 'cod';
 
     const payload = {
-      customer: { name, phone, address, town, notes },
+      customer: { name, email, phone, address, town, notes },
       // Strip cart-internal fields (`key`, `image`) — server doesn't need them.
       cart: cart.map(i => ({ id: i.id, name: i.name, size: i.size, qty: i.qty, price: i.price })),
       totals: { subtotal, delivery, total },
@@ -494,7 +501,10 @@
       }
 
       if (!res.ok) {
-        showInlineMessage('error', data.error || `Order failed (HTTP ${res.status}). Please try again.`);
+        showInlineMessage('error',
+          (data.error || `Order failed (HTTP ${res.status}). Please try again.`) +
+          '\n\nIf this keeps happening, message us on Instagram @retrocloset868 and we\'ll sort it out.'
+        );
         return;
       }
 
@@ -505,7 +515,8 @@
       renderConfirmation(payMethod, { ref: data.orderRef || '', name, phone, total });
     } catch (err) {
       showInlineMessage('error',
-        'Network error — please check your connection and try again.'
+        'Network error — please check your connection and try again.' +
+        '\n\nIf this keeps happening, message us on Instagram @retrocloset868 and we\'ll sort it out.'
       );
     } finally {
       inFlight = false;

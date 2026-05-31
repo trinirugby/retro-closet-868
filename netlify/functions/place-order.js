@@ -88,11 +88,18 @@ function validateOrder(body) {
   const cPhone = (customer.phone ?? '').toString().trim();
   const cAddress = (customer.address ?? '').toString().trim();
   const cTown = (customer.town ?? '').toString().trim();
+  const cEmail = (customer.email ?? '').toString().trim();
   if (cName.length < 1 || cName.length > 120) return 'customer.name must be 1–120 chars';
   if (cPhone.length < 5 || cPhone.length > 30) return 'customer.phone must be 5–30 chars';
   if (!/^[\d+\-()\s]+$/.test(cPhone)) return 'customer.phone has invalid characters';
   if (cAddress.length < 1 || cAddress.length > 300) return 'customer.address must be 1–300 chars';
   if (cTown.length < 1 || cTown.length > 80) return 'customer.town must be 1–80 chars';
+  // Email is optional for now (confirmation automation not yet live); when
+  // provided it's captured on the order, so validate the format only if present.
+  if (cEmail) {
+    if (cEmail.length < 5 || cEmail.length > 120) return 'customer.email must be 5–120 chars';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cEmail)) return 'customer.email is not a valid email address';
+  }
 
   if (!Array.isArray(cart)) return 'cart must be an array';
   if (cart.length < 1) return 'cart is empty';
@@ -110,6 +117,10 @@ function validateOrder(body) {
     if (typeof line.name !== 'string') return `cart[${i}].name must be a string`;
     if (typeof line.price !== 'number' || line.price < 0) {
       return `cart[${i}].price must be a non-negative number`;
+    }
+    // Size is optional (older clients may omit it) but bounded when present.
+    if (line.size != null && (typeof line.size !== 'string' || line.size.length > 40)) {
+      return `cart[${i}].size must be a string up to 40 chars`;
     }
   }
 
@@ -204,7 +215,10 @@ async function createOrder(apiKey, fields, signal) {
 function summariseItems(results) {
   return results
     .filter((r) => r.ok)
-    .map((r) => `${r.requested}× ${r.name || r.id} @ TTD $${(r.price ?? 0).toLocaleString()}`)
+    .map((r) => {
+      const sz = r.size ? ` — Size ${r.size}` : '';
+      return `${r.requested}× ${r.name || r.id}${sz} @ TTD $${(r.price ?? 0).toLocaleString()}`;
+    })
     .join('\n');
 }
 
@@ -219,6 +233,7 @@ async function processLine(apiKey, line) {
     return {
       id: line.id,
       name: line.name || before.name,
+      size: line.size || '',
       requested: line.qty,
       before,
       after: null,
@@ -240,6 +255,7 @@ async function processLine(apiKey, line) {
   return {
     id: line.id,
     name: line.name || before.name,
+    size: line.size || '',
     requested: line.qty,
     price: line.price,
     before,
@@ -279,6 +295,7 @@ exports.handler = async (event) => {
     return {
       id: line.id,
       name: line.name || '',
+      size: line.size || '',
       requested: line.qty,
       before: null,
       after: null,
@@ -311,12 +328,16 @@ exports.handler = async (event) => {
           'Order Ref': orderRef,
           'Placed At': new Date().toISOString(),
           'Customer Name': customer.name,
+          Email: customer.email || '',
           Phone: customer.phone,
           Address: customer.address,
           Town: customer.town,
           Notes: customer.notes || '',
           'Payment Method': paymentLabel,
           Items: summariseItems(results),
+          // Dedicated, filterable column mirroring the sizes embedded in Items
+          // (comma-separated, in line order, for multi-item orders).
+          Size: results.filter((r) => r.ok && r.size).map((r) => r.size).join(', '),
           Subtotal: totals.subtotal,
           'Discount Code': discount.code,
           Discount: discount.amount,

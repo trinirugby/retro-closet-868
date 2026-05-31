@@ -113,7 +113,9 @@ if (heroLayers.length) {
 let flippedCard = null;
 
 function flipElFromPoint(x, y) {
-  return document.elementFromPoint(x, y)?.closest('.product-card__flip') || null;
+  const flip = document.elementFromPoint(x, y)?.closest('.product-card__flip');
+  // Only flip cards that actually have a back image — no flipping to a blank back.
+  return flip?.querySelector('.product-card__img--back') ? flip : null;
 }
 
 function setFlipped(el) {

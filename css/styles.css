@@ -880,12 +880,13 @@ body::before {
   transform-style: preserve-3d;
   transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
-/* Desktop pointer devices only — avoids sticky :hover flip on touchscreens */
+/* Desktop pointer devices only — avoids sticky :hover flip on touchscreens.
+   :has() gate → only cards with a back image flip (no flip to a blank back). */
 @media (hover: hover) {
-  .product-card:hover .product-card__flip-inner { transform: rotateY(180deg); }
+  .product-card:hover .product-card__flip:has(.product-card__img--back) .product-card__flip-inner { transform: rotateY(180deg); }
 }
 
-/* Touch-driven flip (set by main.js) */
+/* Touch-driven flip (set by main.js — only added to cards that have a back image) */
 .product-card__flip.is-flipped .product-card__flip-inner { transform: rotateY(180deg); }
 
 .product-card__img {

@@ -866,6 +866,7 @@ body::before {
 .product-card__badge--hot { background: var(--gold); color: var(--bg); }
 .product-card__badge--new { background: var(--white); color: var(--bg); }
 .product-card__badge--sale { background: var(--red); color: var(--white); }
+.product-card__badge--new-arrival { background: var(--gold); color: var(--bg); }
 
 /* Flip image container */
 .product-card__flip {

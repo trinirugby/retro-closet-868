@@ -18,7 +18,14 @@ async function fetchProducts() {
     const res = await fetch('/api/get-products');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const { products } = await res.json();
-    allProducts = products;
+    // New arrivals first; stable within each group preserves the API order.
+    allProducts = products
+      .map((p, i) => [p, i])
+      .sort((a, b) => {
+        const rank = p => (p.badge === 'New Arrival' ? 0 : 1);
+        return rank(a[0]) - rank(b[0]) || a[1] - b[1];
+      })
+      .map(pair => pair[0]);
     renderCards(allProducts);
   } catch (err) {
     showError(err.message);
@@ -96,8 +103,9 @@ function renderCards(products) {
 }
 
 function buildCard(p) {
+  const badgeSlug = p.badge.toLowerCase().replace(/\s+/g, '-');
   const badgeHtml = p.badge
-    ? `<span class="product-card__badge product-card__badge--${p.badge.toLowerCase()}">${p.badge}</span>`
+    ? `<span class="product-card__badge product-card__badge--${badgeSlug}">${p.badge}</span>`
     : '';
 
   const sizePills = (p.sizes || []).map(s =>

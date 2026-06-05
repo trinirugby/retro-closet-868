@@ -251,13 +251,13 @@
   import { addItem } from './js/cart.js';
   import { showToast } from './js/main.js';
 
-  // Featured section — load first 4 products
+  // Featured section — show ALL "New Arrival" shirts (badge === "New")
   async function loadFeatured() {
     const grid = document.getElementById('product-grid');
     if (!grid) return;
 
-    // Show 4 skeletons
-    grid.innerHTML = Array(4).fill(`
+    // Show 8 skeletons
+    grid.innerHTML = Array(8).fill(`
       <div class="skeleton">
         <div class="skeleton__img"></div>
         <div class="skeleton__body">
@@ -270,7 +270,12 @@
     try {
       const res = await fetch('/api/get-products');
       const { products } = await res.json();
-      const featured = products.slice(0, 4);
+      // New arrivals = products flagged with the "New" badge. Fall back to
+      // the first few products if nothing is currently flagged.
+      const newArrivals = products.filter(
+        (p) => p.badge && p.badge.toLowerCase().includes('new')
+      );
+      const featured = newArrivals.length ? newArrivals : products.slice(0, 4);
 
       grid.innerHTML = featured.map(p => {
         const badgeHtml = p.badge

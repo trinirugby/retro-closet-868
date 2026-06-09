@@ -248,8 +248,6 @@
 <script type="module">
   import './js/main.js';
   import './js/cart.js';
-  import { addItem } from './js/cart.js';
-  import { showToast } from './js/main.js';
 
   // Featured section — show ALL "New Arrival" shirts (badge === "New")
   async function loadFeatured() {
@@ -281,11 +279,8 @@
         const badgeHtml = p.badge
           ? `<span class="product-card__badge product-card__badge--${p.badge.toLowerCase()}">${p.badge}</span>`
           : '';
-        const sizePills = (p.sizes || []).map(s =>
-          `<button class="size-pill" data-size="${s}" type="button">${s}</button>`
-        ).join('');
         return `
-          <article class="product-card" data-id="${p.id}">
+          <a class="product-card" data-id="${p.id}" href="product.html?id=${p.id}">
             ${badgeHtml}
             <div class="product-card__flip">
               <div class="product-card__flip-inner">
@@ -297,31 +292,9 @@
               <div class="product-card__league">${p.league}</div>
               <h3 class="product-card__name">${p.name}</h3>
               <div class="product-card__price">TTD $${p.price.toLocaleString()}<span>TTD</span></div>
-              <div class="product-card__sizes">${sizePills}</div>
-              <button class="product-card__add" type="button">Add to Cart</button>
             </div>
-          </article>`;
+          </a>`;
       }).join('');
-
-      // Bind interactions
-      grid.querySelectorAll('.size-pill').forEach(pill => {
-        pill.addEventListener('click', () => {
-          pill.closest('.product-card__sizes').querySelectorAll('.size-pill').forEach(p => p.classList.remove('selected'));
-          pill.classList.add('selected');
-        });
-      });
-      grid.querySelectorAll('.product-card__add').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const card = btn.closest('.product-card');
-          const product = products.find(p => p.id === card.dataset.id);
-          const selectedPill = card.querySelector('.size-pill.selected');
-          if (!selectedPill) { showToast('Please select a size first'); return; }
-          addItem(product, selectedPill.dataset.size);
-          btn.textContent = 'Added ✓';
-          btn.classList.add('added');
-          setTimeout(() => { btn.textContent = 'Add to Cart'; btn.classList.remove('added'); }, 1800);
-        });
-      });
     } catch (e) {
       grid.innerHTML = `<div class="empty-state"><p>Could not load featured products.</p></div>`;
     }

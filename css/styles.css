@@ -597,12 +597,13 @@ body::before {
   text-align: center;
 }
 .cart-item__remove {
-  color: rgba(240,237,230,0.3);
-  font-size: 0.7rem;
-  font-family: var(--font-ui);
-  letter-spacing: 0.1em;
+  color: rgba(240,237,230,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  padding: 4px;
   transition: color var(--transition);
-  padding-top: 4px;
 }
 .cart-item__remove:hover { color: var(--red); }
 
@@ -1008,6 +1009,126 @@ body::before {
   background: var(--gold);
   border-color: var(--gold);
   color: var(--bg);
+}
+
+/* ── Product detail page ──────────────────────────────────── */
+.product-detail-page {
+  padding: 7rem 0 4rem;
+}
+.product-detail__back {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--white-dim);
+  margin-bottom: 2rem;
+  transition: color var(--transition);
+}
+.product-detail__back:hover { color: var(--gold); }
+
+.product-detail__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+  align-items: start;
+}
+@media (min-width: 768px) {
+  .product-detail__grid { grid-template-columns: 1fr 1fr; gap: 3.5rem; }
+}
+
+.product-detail__media .product-card__flip {
+  aspect-ratio: 3 / 4;
+  background: var(--surface);
+}
+/* Hover-flip on desktop (the catalogue rule is scoped to .product-card parents). */
+@media (hover: hover) {
+  .product-detail__media .product-card__flip:has(.product-card__img--back):hover .product-card__flip-inner {
+    transform: rotateY(180deg);
+  }
+}
+
+.product-detail__info { display: flex; flex-direction: column; }
+.product-detail__badge-row { margin-bottom: 1rem; }
+.product-detail__badge-row .product-card__badge { position: static; }
+.product-detail__league {
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 0.6rem;
+}
+.product-detail__name {
+  font-family: var(--font-display);
+  font-size: 2.25rem;
+  line-height: 1.15;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+.product-detail__price {
+  font-family: var(--font-display);
+  font-size: 1.85rem;
+  font-weight: 600;
+  color: var(--gold);
+  margin-bottom: 1.5rem;
+}
+.product-detail__price span {
+  font-size: 0.7rem;
+  font-family: var(--font-ui);
+  letter-spacing: 0.1em;
+  color: var(--white-dim);
+  margin-left: 4px;
+}
+.product-detail__desc {
+  font-family: var(--font-ui);
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--white-dim);
+  margin-bottom: 2rem;
+}
+.product-detail__sizes { margin-bottom: 2rem; }
+.product-detail__sizes-label {
+  font-family: var(--font-ui);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--white-dim);
+  margin-bottom: 0.75rem;
+}
+.product-detail__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+@media (min-width: 480px) {
+  .product-detail__actions { flex-direction: row; }
+  .product-detail__actions .btn-gold,
+  .product-detail__actions .btn-outline { flex: 1; justify-content: center; }
+}
+.product-detail__soldout {
+  font-family: var(--font-ui);
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+  color: var(--red);
+  margin-top: 0.5rem;
+}
+
+.product-detail__missing {
+  text-align: center;
+  padding: 4rem 0;
+}
+.product-detail__missing-title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+}
+.product-detail__missing-sub {
+  font-family: var(--font-ui);
+  color: var(--white-dim);
+  margin-bottom: 2rem;
 }
 
 /* ── Skeleton loader ──────────────────────────────────────── */
@@ -1483,10 +1604,11 @@ body::before {
   color: var(--gold);
 }
 .cart-table-row__remove {
-  color: rgba(240,237,230,0.3);
-  font-family: var(--font-ui);
-  font-size: 0.65rem;
-  letter-spacing: 0.1em;
+  color: rgba(240,237,230,0.4);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
   transition: color var(--transition);
 }
 .cart-table-row__remove:hover { color: var(--red); }

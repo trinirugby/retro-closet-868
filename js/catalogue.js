@@ -1,9 +1,6 @@
 /* ============================================================
    CATALOGUE.JS — Fetch products, filter, render cards
    ============================================================ */
-import { addItem } from './cart.js';
-import { showToast } from './main.js';
-
 let allProducts = [];
 let activeFilter = 'all';
 
@@ -67,39 +64,6 @@ function renderCards(products) {
   }
 
   grid.innerHTML = products.map(p => buildCard(p)).join('');
-
-  // Bind size pill selection
-  grid.querySelectorAll('.size-pill').forEach(pill => {
-    pill.addEventListener('click', () => {
-      const cardPills = pill.closest('.product-card__sizes').querySelectorAll('.size-pill');
-      cardPills.forEach(p => p.classList.remove('selected'));
-      pill.classList.add('selected');
-    });
-  });
-
-  // Bind add-to-cart
-  grid.querySelectorAll('.product-card__add').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const card = btn.closest('.product-card');
-      const productId = card.dataset.id;
-      const product = allProducts.find(p => p.id === productId);
-      if (!product) return;
-
-      const selectedPill = card.querySelector('.size-pill.selected');
-      if (!selectedPill) {
-        showToast('Please select a size first');
-        return;
-      }
-
-      addItem(product, selectedPill.dataset.size);
-      btn.textContent = 'Added ✓';
-      btn.classList.add('added');
-      setTimeout(() => {
-        btn.textContent = 'Add to Cart';
-        btn.classList.remove('added');
-      }, 1800);
-    });
-  });
 }
 
 function buildCard(p) {
@@ -107,10 +71,6 @@ function buildCard(p) {
   const badgeHtml = p.badge
     ? `<span class="product-card__badge product-card__badge--${badgeSlug}">${p.badge}</span>`
     : '';
-
-  const sizePills = (p.sizes || []).map(s =>
-    `<button class="size-pill" data-size="${s}" type="button">${s}</button>`
-  ).join('');
 
   const frontImg = p.imageFront
     ? `<img class="product-card__img" src="${p.imageFront}" alt="${p.name} front" loading="lazy" onerror="this.style.display='none'">`
@@ -121,7 +81,7 @@ function buildCard(p) {
     : `<div class="product-card__img-placeholder" style="transform:rotateY(180deg)">No Image</div>`;
 
   return `
-    <article class="product-card" data-id="${p.id}">
+    <a class="product-card" data-id="${p.id}" href="product.html?id=${p.id}">
       ${badgeHtml}
       <div class="product-card__flip">
         <div class="product-card__flip-inner">
@@ -136,10 +96,8 @@ function buildCard(p) {
           TTD $${p.price.toLocaleString()}
           <span>TTD</span>
         </div>
-        <div class="product-card__sizes">${sizePills}</div>
-        <button class="product-card__add" type="button">Add to Cart</button>
       </div>
-    </article>`;
+    </a>`;
 }
 
 // ── Skeleton loaders ────────────────────────────────────────

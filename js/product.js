@@ -66,7 +66,7 @@ function render(p) {
     ? `<img class="product-card__img product-card__img--back" src="${p.imageBack}" alt="${p.name} back" onerror="this.style.display='none'">`
     : `<div class="product-card__img-placeholder" style="transform:rotateY(180deg)">No Image</div>`;
 
-  const sizePills = (p.sizes || []).map(s =>
+  const sizePills = ['S', 'M', 'L'].map(s =>
     `<button class="size-pill" data-size="${s}" type="button">${s}</button>`
   ).join('');
 

@@ -36,6 +36,11 @@ const MAX_LINES = 25;
 const PER_LINE_TIMEOUT_MS = 6_000;
 const ORDER_WRITE_TIMEOUT_MS = 6_000;
 
+// Delivery pricing. Must mirror the client (cart.html / checkout.html):
+// flat fee, waived once the subtotal reaches the free-delivery threshold.
+const DELIVERY_FEE = 50;
+const FREE_DELIVERY_THRESHOLD = 500;
+
 // Maps the checkout page's radio values to the Airtable singleSelect choices.
 const PAYMENT_LABELS = {
   cod: 'Pay on Delivery',
@@ -282,7 +287,7 @@ exports.handler = async (event) => {
   const validationError = validateOrder(body);
   if (validationError) return json(400, { error: validationError });
 
-  const { customer, cart, totals } = body;
+  const { customer, cart } = body;
   const orderRef = makeOrderRef();
 
   // Parallel per-line: Promise.allSettled so one slow/failed line doesn't
@@ -313,11 +318,28 @@ exports.handler = async (event) => {
   // was reserved — a fully-failed attempt sold nothing. A write failure here
   // must NOT fail the response: stock is already committed, so we log and move
   // on rather than telling the customer their paid-for order failed.
-  // Discount is resolved server-side from the code (authoritative amount),
-  // then the order total is recomputed so it always reflects the real
-  // discount regardless of what the client submitted.
-  const discount = resolveDiscount(body.discountCode, totals.subtotal);
-  const recordedTotal = totals.subtotal - discount.amount + totals.delivery;
+  //
+  // Money is recomputed server-side from the lines that ACTUALLY reserved
+  // (r.ok), never from the client's `totals`. On a partial failure the client
+  // subtotal still counts the lines that sold out, which would record a total
+  // for items the customer isn't getting (always an overcharge). Pricing the
+  // order off the reserved lines keeps Total in lockstep with the Items list,
+  // and re-deriving delivery means a partial order can't keep free delivery it
+  // no longer qualifies for. Discount is resolved server-side from the code.
+  const reservedSubtotal = results
+    .filter((r) => r.ok)
+    .reduce((s, r) => s + (r.price ?? 0) * r.requested, 0);
+  const discount = resolveDiscount(body.discountCode, reservedSubtotal);
+  const reservedDelivery =
+    reservedSubtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
+  const recordedTotal = reservedSubtotal - discount.amount + reservedDelivery;
+  // Authoritative totals (reserved lines only) — used for the record, log,
+  // and response so all three agree with the Items list.
+  const recordedTotals = {
+    subtotal: reservedSubtotal,
+    delivery: reservedDelivery,
+    total: recordedTotal,
+  };
 
   if (anyOk) {
     const paymentLabel = PAYMENT_LABELS[body.payment] || PAYMENT_LABELS.cod;
@@ -338,10 +360,10 @@ exports.handler = async (event) => {
           // Dedicated, filterable column mirroring the sizes embedded in Items
           // (comma-separated, in line order, for multi-item orders).
           Size: results.filter((r) => r.ok && r.size).map((r) => r.size).join(', '),
-          Subtotal: totals.subtotal,
+          Subtotal: reservedSubtotal,
           'Discount Code': discount.code,
           Discount: discount.amount,
-          Delivery: totals.delivery,
+          Delivery: reservedDelivery,
           Total: recordedTotal,
           Status: 'New',
         },
@@ -362,7 +384,7 @@ exports.handler = async (event) => {
       customer,
       payment: body.payment || 'cod',
       discount,
-      totals: { ...totals, total: recordedTotal },
+      totals: recordedTotals,
       results,
     }),
   );

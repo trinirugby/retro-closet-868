@@ -31,15 +31,19 @@ const BASE_ID = 'appcA2sFnpO4O9x7N';
 const TABLE_ID = 'tblWjg7NqsZvK0otW';
 // Orders table — one record per placed order (audit trail for the seller).
 const ORDERS_TABLE_ID = 'tbl7mY2r8TUhWBVgE';
+// Delivery Locations table — the courier rate card (area → fee). Read here so
+// the charged delivery fee is authoritative, never trusted from the client.
+const LOCATIONS_TABLE_ID = 'tblBjtLDlEKnPlX4y';
 
 const MAX_LINES = 25;
 const PER_LINE_TIMEOUT_MS = 6_000;
 const ORDER_WRITE_TIMEOUT_MS = 6_000;
+const RATES_TIMEOUT_MS = 6_000;
 
-// Delivery pricing. Must mirror the client (cart.html / checkout.html):
-// flat fee, waived once the subtotal reaches the free-delivery threshold.
-const DELIVERY_FEE = 50;
-const FREE_DELIVERY_THRESHOLD = 500;
+// Delivery is priced per area from the Delivery Locations table (mirrors
+// checkout.html). Areas not on the rate card — including the "Other" option —
+// are recorded with no fee (0) for the seller to confirm before dispatch.
+const DELIVERY_TBD = 0;
 
 // Maps the checkout page's radio values to the Airtable singleSelect choices.
 const PAYMENT_LABELS = {
@@ -216,6 +220,48 @@ async function createOrder(apiKey, fields, signal) {
   return res.json();
 }
 
+// ── Airtable read (delivery rate card) ──────────────────────
+/** Fetches the active delivery areas as a Map of normalised name → fee (TTD).
+ *  Names are lowercased+trimmed so client/Airtable spacing/case can't cause a
+ *  mismatch. Returns an empty Map on any failure — callers treat a miss as
+ *  "fee to be confirmed" rather than failing an already-committed order. */
+async function fetchDeliveryRates(apiKey, signal) {
+  const rates = new Map();
+  let offset = null;
+  do {
+    const params = new URLSearchParams({
+      filterByFormula: '{Active}=TRUE()',
+      pageSize: '100',
+    });
+    ['Location', 'Price'].forEach((f) => params.append('fields[]', f));
+    if (offset) params.set('offset', offset);
+
+    const url = `https://api.airtable.com/v0/${BASE_ID}/${LOCATIONS_TABLE_ID}?${params}`;
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${apiKey}` }, signal });
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      throw new Error(`Airtable rates read ${res.status}: ${text.slice(0, 200)}`);
+    }
+    const data = await res.json();
+    for (const rec of data.records) {
+      const f = rec.fields || {};
+      const name = (f.Location || '').toString().trim().toLowerCase();
+      if (name && typeof f.Price === 'number') rates.set(name, f.Price);
+    }
+    offset = data.offset || null;
+  } while (offset);
+  return rates;
+}
+
+/** Resolves a (possibly missing) area name to an authoritative delivery fee.
+ *  Unknown areas and the "Other" option resolve to DELIVERY_TBD (0). */
+function resolveDelivery(rates, town) {
+  const key = (town ?? '').toString().trim().toLowerCase();
+  if (!key || key === 'other') return DELIVERY_TBD;
+  const fee = rates.get(key);
+  return typeof fee === 'number' ? fee : DELIVERY_TBD;
+}
+
 // One human-readable line per successfully-reserved item.
 function summariseItems(results) {
   return results
@@ -323,15 +369,24 @@ exports.handler = async (event) => {
   // (r.ok), never from the client's `totals`. On a partial failure the client
   // subtotal still counts the lines that sold out, which would record a total
   // for items the customer isn't getting (always an overcharge). Pricing the
-  // order off the reserved lines keeps Total in lockstep with the Items list,
-  // and re-deriving delivery means a partial order can't keep free delivery it
-  // no longer qualifies for. Discount is resolved server-side from the code.
+  // order off the reserved lines keeps Total in lockstep with the Items list.
+  // Discount and delivery are both resolved server-side: discount from the
+  // code, delivery from the courier rate card keyed on the customer's area.
   const reservedSubtotal = results
     .filter((r) => r.ok)
     .reduce((s, r) => s + (r.price ?? 0) * r.requested, 0);
   const discount = resolveDiscount(body.discountCode, reservedSubtotal);
-  const reservedDelivery =
-    reservedSubtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
+
+  // Best-effort rate-card read. Stock is already committed by this point, so a
+  // failure here must not fail the order — fall back to "fee to be confirmed"
+  // (0) and log loudly for the seller, matching the order-write philosophy.
+  let rates = new Map();
+  try {
+    rates = await fetchDeliveryRates(apiKey, AbortSignal.timeout(RATES_TIMEOUT_MS));
+  } catch (err) {
+    console.error('[place-order] DELIVERY RATES READ FAILED', orderRef, err?.message || err);
+  }
+  const reservedDelivery = resolveDelivery(rates, customer.town);
   const recordedTotal = reservedSubtotal - discount.amount + reservedDelivery;
   // Authoritative totals (reserved lines only) — used for the record, log,
   // and response so all three agree with the Items list.

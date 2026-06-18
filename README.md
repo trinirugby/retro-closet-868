@@ -73,8 +73,8 @@ The dashboard repo `trinirugby/Retro-Closet-Dashboard` (private, deployed to <ht
 ```json
 {
   "orderRef": "RC-AB12CD",
-  "customer": { "name": "...", "phone": "...", "address": "...", "town": "...", "notes": "..." },
-  "totals":   { "subtotal": 700, "delivery": 0, "total": 700 },
+  "customer": { "name": "...", "phone": "...", "address": "...", "town": "San Fernando", "notes": "..." },
+  "totals":   { "subtotal": 700, "delivery": 70, "total": 770 },
   "results": [
     { "id": "rec...", "name": "...", "requested": 1,
       "before": { "stock_quantity": 3, "units_sold": 4, "in_stock": true, "name": "..." },
@@ -88,6 +88,15 @@ The dashboard repo `trinirugby/Retro-Closet-Dashboard` (private, deployed to <ht
 ```
 
 HTTP status: `200` if every line succeeded, `207 Multi-Status` if any failed. The checkout client prunes the local cart to remove succeeded lines on a 207 so a retry doesn't double-decrement.
+
+### Delivery pricing (per-area rate card)
+
+Delivery is priced by the customer's area, not a flat fee. The rate card lives in the Airtable **`Delivery Locations`** table — one row per area (`Location`, `Price` in TTD, `Active` checkbox). The seller maintains it entirely in Airtable: edit `Price` to change a fee, add a row for a new area, or uncheck `Active` to hide one. No code change or redeploy.
+
+- `netlify/functions/get-delivery-locations.js` (`GET /api/get-delivery-locations`) returns the active areas + fees. `checkout.html` uses it to build the area dropdown (grouped by fee) and to show the fee live the moment an area is picked.
+- `place-order.js` re-reads the same table server-side and resolves the fee from `customer.town` — so the **charged** fee is authoritative and can't be tampered with from the browser. Matching is case-insensitive and trimmed.
+- Areas not on the card — including the checkout's **"My area isn't listed"** (`Other`) option — record a delivery of `0` ("to be confirmed"); the seller confirms the fee on WhatsApp before dispatch. If the rate-card read fails, the order still completes with delivery `0` and a `DELIVERY RATES READ FAILED` log line for reconciliation (stock is already committed by that point).
+- The **cart** page can't know the area yet, so it shows "Calculated at checkout" and totals the subtotal alone.
 
 ### Known limitations (v1)
 

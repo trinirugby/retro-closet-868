@@ -96,18 +96,12 @@
           </div>
           <div class="cart-summary__row" id="delivery-row">
             <span>Delivery</span>
-            <span id="cart-delivery">TTD $50</span>
+            <span id="cart-delivery" style="font-size:0.82rem;color:var(--white-dim)">Calculated at checkout</span>
           </div>
           <div class="cart-summary__row cart-summary__row--total">
             <span>Total</span>
             <span class="cart-summary__total-price" id="cart-total-price">TTD $0</span>
           </div>
-          <p id="free-delivery-note" style="font-size:0.7rem;color:var(--gold);font-family:var(--font-ui);margin-top:0.5rem;display:none">
-            ✓ Free delivery on orders over TTD $500
-          </p>
-          <p id="delivery-threshold-note" style="font-size:0.7rem;color:var(--white-dim);font-family:var(--font-ui);margin-top:0.5rem;line-height:1.5">
-            Free delivery on orders over TTD $500.
-          </p>
           <div class="cart-summary__actions">
             <a href="checkout.html" class="btn-gold" id="proceed-btn" style="width:100%;justify-content:center;text-align:center">
               <span>Proceed to Checkout</span>
@@ -172,8 +166,9 @@
   import './js/main.js';
 
   const STORAGE_KEY = 'rc868_cart';
-  const DELIVERY_FEE = 50;
-  const FREE_DELIVERY_THRESHOLD = 500;
+  // Delivery is priced per area at checkout (see the Airtable "Delivery
+  // Locations" rate card), so the cart can't know the fee yet — it shows the
+  // subtotal and defers delivery to the checkout step.
 
   function getCart() {
     try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
@@ -200,8 +195,6 @@
     const subtotalEl = document.getElementById('cart-subtotal');
     const deliveryEl = document.getElementById('cart-delivery');
     const totalEl   = document.getElementById('cart-total-price');
-    const freeNote  = document.getElementById('free-delivery-note');
-    const threshNote = document.getElementById('delivery-threshold-note');
 
     if (cart.length === 0) {
       emptyEl.style.display = 'block';
@@ -212,15 +205,12 @@
     fullEl.style.display  = 'block';
 
     const subtotal = getSubtotal(cart);
-    const delivery = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
-    const total = subtotal + delivery;
 
     if (subtotalEl) subtotalEl.textContent = `TTD $${subtotal.toLocaleString()}`;
-    if (deliveryEl) deliveryEl.textContent = delivery === 0 ? 'FREE' : `TTD $${DELIVERY_FEE}`;
-    if (totalEl) totalEl.textContent = `TTD $${total.toLocaleString()}`;
-
-    if (freeNote) freeNote.style.display = delivery === 0 ? 'block' : 'none';
-    if (threshNote) threshNote.style.display = delivery === 0 ? 'none' : 'block';
+    if (deliveryEl) deliveryEl.textContent = 'Calculated at checkout';
+    // Delivery is added once the customer picks their area at checkout, so the
+    // cart total is the subtotal alone.
+    if (totalEl) totalEl.textContent = `TTD $${subtotal.toLocaleString()}`;
 
     if (tbody) {
       tbody.innerHTML = cart.map(item => `

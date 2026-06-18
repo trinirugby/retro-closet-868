@@ -93,17 +93,12 @@
               <input type="text" id="address" name="address" placeholder="Street address" required autocomplete="street-address">
             </div>
             <div class="form-field">
-              <label for="town">Town / City *</label>
+              <label for="town">Delivery Area *</label>
               <select id="town" name="town" required>
                 <option value="" disabled selected>Select your area</option>
-                <option value="Port of Spain">Port of Spain</option>
-                <option value="San Fernando">San Fernando</option>
-                <option value="Chaguanas">Chaguanas</option>
-                <option value="Arima">Arima</option>
-                <option value="Point Fortin">Point Fortin</option>
-                <option value="Scarborough">Scarborough (Tobago)</option>
-                <option value="Other">Other</option>
+                <option value="__OTHER__">My area isn't listed</option>
               </select>
+              <p id="delivery-area-note" style="font-size:0.7rem;color:var(--white-dim);font-family:var(--font-ui);margin-top:0.5rem;line-height:1.5;display:none"></p>
             </div>
             <div class="form-field">
               <label for="notes">Delivery Notes <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
@@ -177,15 +172,12 @@
         </div>
         <div class="cart-summary__row">
           <span>Delivery</span>
-          <span id="summary-delivery">TTD $50</span>
+          <span id="summary-delivery">Select your area</span>
         </div>
         <div class="cart-summary__row cart-summary__row--total">
           <span>Total</span>
           <span class="cart-summary__total-price" id="summary-total">TTD $0</span>
         </div>
-        <p id="summary-free-note" style="font-size:0.7rem;color:var(--gold);font-family:var(--font-ui);margin-top:0.5rem;display:none">
-          ✓ Free delivery applied
-        </p>
       </aside>
 
     </div>
@@ -276,8 +268,13 @@
   import './js/main.js';
 
   const STORAGE_KEY = 'rc868_cart';
-  const DELIVERY_FEE = 50;
-  const FREE_DELIVERY_THRESHOLD = 500;
+
+  // Delivery is priced per area from the Airtable "Delivery Locations" rate
+  // card, fetched once on load. The server (place-order.js) re-reads the same
+  // table and is the source of truth; this is just for live UX.
+  const DELIVERY_LOCATIONS_URL = '/api/get-delivery-locations';
+  const OTHER_AREA = '__OTHER__';      // sentinel for the "not listed" option
+  const locationPrice = new Map();      // area name → fee (TTD)
 
   // Discount codes → flat TTD off the subtotal (delivery unchanged). The
   // server re-validates and is the source of truth; this is just for UX.
@@ -301,15 +298,31 @@
   function getSubtotal(cart) { return cart.reduce((s, i) => s + i.price * i.qty, 0); }
   function getCount(cart) { return cart.reduce((s, i) => s + i.qty, 0); }
 
+  // Resolves the currently-selected area to a delivery fee.
+  //   { fee: number, tbd: false } → a listed area with a known fee
+  //   { fee: null,  tbd: true  } → "not listed": fee confirmed later by seller
+  //   { fee: null,  tbd: false } → nothing chosen yet
+  function resolveDelivery() {
+    const town = document.getElementById('town')?.value || '';
+    if (!town) return { fee: null, tbd: false };
+    if (town === OTHER_AREA) return { fee: null, tbd: true };
+    if (locationPrice.has(town)) return { fee: locationPrice.get(town), tbd: false };
+    // Unknown value (e.g. rate card changed mid-session) → treat as TBD.
+    return { fee: null, tbd: true };
+  }
+
   // Single source of order math, shared by the summary and the submit handler.
-  // Discount comes off the subtotal (capped at it); delivery is based on the
-  // pre-discount subtotal so a code can't unlock free delivery.
+  // Discount comes off the subtotal (capped at it); delivery is the per-area
+  // fee. When the area is unknown/not-listed, delivery is excluded from the
+  // running total and confirmed by the seller before dispatch.
   function computeTotals(cart) {
     const subtotal = getSubtotal(cart);
     const discount = appliedCode ? Math.min(DISCOUNT_CODES[appliedCode], subtotal) : 0;
-    const delivery = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
+    const { fee, tbd } = resolveDelivery();
+    const deliveryKnown = typeof fee === 'number';
+    const delivery = deliveryKnown ? fee : 0;
     const total = subtotal - discount + delivery;
-    return { subtotal, discount, delivery, total };
+    return { subtotal, discount, delivery, deliveryKnown, deliveryTBD: tbd, total };
   }
 
   function updateBadge() {
@@ -329,21 +342,41 @@
       return;
     }
 
-    const { subtotal, discount, delivery, total } = computeTotals(cart);
+    const { subtotal, discount, delivery, deliveryKnown, deliveryTBD, total } = computeTotals(cart);
 
     const itemsEl    = document.getElementById('summary-items');
     const subtotalEl = document.getElementById('summary-subtotal');
     const deliveryEl = document.getElementById('summary-delivery');
     const totalEl    = document.getElementById('summary-total');
-    const freeNote   = document.getElementById('summary-free-note');
     const discountRow = document.getElementById('summary-discount-row');
     const discountLabel = document.getElementById('summary-discount-label');
     const discountEl  = document.getElementById('summary-discount');
+    const areaNote   = document.getElementById('delivery-area-note');
 
     if (subtotalEl) subtotalEl.textContent = `TTD $${subtotal.toLocaleString()}`;
-    if (deliveryEl) deliveryEl.textContent = delivery === 0 ? 'FREE' : `TTD $${DELIVERY_FEE}`;
-    if (totalEl) totalEl.textContent = `TTD $${total.toLocaleString()}`;
-    if (freeNote) freeNote.style.display = delivery === 0 ? 'block' : 'none';
+
+    // Delivery + Total depend on whether an area (and thus a fee) is known.
+    if (deliveryEl) {
+      deliveryEl.textContent = deliveryKnown
+        ? `TTD $${delivery.toLocaleString()}`
+        : (deliveryTBD ? 'To be confirmed' : 'Select your area');
+    }
+    if (totalEl) {
+      totalEl.textContent = deliveryKnown
+        ? `TTD $${total.toLocaleString()}`
+        : `TTD $${(subtotal - discount).toLocaleString()} + delivery`;
+    }
+
+    // Note under the area dropdown when the fee can't be charged automatically.
+    if (areaNote) {
+      if (deliveryTBD) {
+        areaNote.textContent =
+          "Your area isn't on our standard courier list — we'll message you on WhatsApp to confirm the delivery fee before dispatch.";
+        areaNote.style.display = 'block';
+      } else {
+        areaNote.style.display = 'none';
+      }
+    }
 
     if (discountRow) {
       discountRow.hidden = discount <= 0;
@@ -453,12 +486,16 @@
       return;
     }
 
-    const { subtotal, delivery, total } = computeTotals(cart);
+    const { subtotal, delivery, total, deliveryTBD } = computeTotals(cart);
+
+    // The dropdown's "not listed" sentinel is recorded as a plain "Other" so the
+    // seller sees a readable area and knows to confirm the delivery fee.
+    const townOut = town === OTHER_AREA ? 'Other' : town;
 
     const payMethod = form.querySelector('input[name="payMethod"]:checked')?.value || 'cod';
 
     const payload = {
-      customer: { name, email, phone, address, town, notes },
+      customer: { name, email, phone, address, town: townOut, notes },
       // Strip cart-internal fields (`key`, `image`) — server doesn't need them.
       cart: cart.map(i => ({ id: i.id, name: i.name, size: i.size, qty: i.qty, price: i.price })),
       totals: { subtotal, delivery, total },
@@ -512,7 +549,7 @@
       localStorage.removeItem(STORAGE_KEY);
       updateBadge();
       clearInlineMessage();
-      renderConfirmation(payMethod, { ref: data.orderRef || '', name, phone, total });
+      renderConfirmation(payMethod, { ref: data.orderRef || '', name, phone, total, deliveryTBD });
     } catch (err) {
       showInlineMessage('error',
         'Network error — please check your connection and try again.' +
@@ -527,7 +564,7 @@
   // ── Confirmation: reveal the panel + the bits relevant to the chosen method ──
   function fmtTTD(n) { return `TTD $${Number(n).toLocaleString()}`; }
 
-  function renderConfirmation(method, { ref, name, phone, total }) {
+  function renderConfirmation(method, { ref, name, phone, total, deliveryTBD }) {
     const layout = document.querySelector('.checkout-layout');
     const panel  = document.getElementById('confirm-panel');
     if (!panel) return;
@@ -544,15 +581,22 @@
     // Start with the optional blocks hidden; switch on the chosen method.
     bank.hidden = ig.hidden = true;
 
+    // When the area isn't on the courier list, the running total excludes the
+    // delivery fee; the seller confirms it before dispatch. Reflect that here.
+    const tbdNote = deliveryTBD
+      ? ` Your area isn't on our standard courier list, so we'll confirm the delivery fee with you on WhatsApp before dispatch — the amount below is before delivery.`
+      : '';
+
     if (method === 'bank-ig') {
       lead.textContent =
-        'Your order is confirmed. For online transfers, kindly transfer the total cost to the following bank account:';
+        'Your order is confirmed. For online transfers, kindly transfer the total cost to the following bank account:' +
+        tbdNote;
       bank.hidden = false;
       document.getElementById('bank-name').textContent           = BANK_DETAILS.bank;
       document.getElementById('bank-account-name').textContent   = BANK_DETAILS.accountName;
       document.getElementById('bank-account-number').textContent = BANK_DETAILS.accountNumber;
       document.getElementById('bank-account-type').textContent   = BANK_DETAILS.accountType;
-      document.getElementById('bank-amount').textContent         = fmtTTD(total);
+      document.getElementById('bank-amount').textContent         = deliveryTBD ? `${fmtTTD(total)} + delivery` : fmtTTD(total);
       document.getElementById('bank-ref').textContent            = ref || '—';
       document.getElementById('bank-ig-handle').textContent      = `@${INSTAGRAM_HANDLE}`;
       ig.hidden = false;
@@ -561,7 +605,8 @@
       // Pay on delivery
       lead.textContent =
         `Your order is confirmed. Pay with cash or card when your order arrives. ` +
-        `We'll message you on WhatsApp at ${phone} to arrange delivery.`;
+        `We'll message you on WhatsApp at ${phone} to arrange delivery.` +
+        tbdNote;
     }
 
     panel.hidden = false;
@@ -603,8 +648,56 @@
     if (e.key === 'Enter') { e.preventDefault(); applyDiscount(); }
   });
 
+  // ── Delivery areas ──────────────────────────────────────────
+  // Fill the area dropdown from the Airtable rate card, grouped by fee. The
+  // "not listed" option is already in the markup; we insert real areas before
+  // it and keep a name→fee map for live total calculation.
+  function populateAreas(locations) {
+    const sel = document.getElementById('town');
+    if (!sel) return;
+    const otherOpt = sel.querySelector(`option[value="${OTHER_AREA}"]`);
+    sel.querySelectorAll('optgroup').forEach((g) => g.remove());
+    locationPrice.clear();
+
+    const byPrice = new Map(); // fee → [area names], preserving sorted input order
+    locations.forEach(({ location, price }) => {
+      locationPrice.set(location, price);
+      if (!byPrice.has(price)) byPrice.set(price, []);
+      byPrice.get(price).push(location);
+    });
+
+    [...byPrice.keys()].sort((a, b) => a - b).forEach((price) => {
+      const group = document.createElement('optgroup');
+      group.label = `TTD $${price} delivery`;
+      byPrice.get(price).forEach((name) => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        group.appendChild(opt);
+      });
+      sel.insertBefore(group, otherOpt);
+    });
+  }
+
+  async function loadAreas() {
+    try {
+      const res = await fetch(DELIVERY_LOCATIONS_URL);
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && Array.isArray(data.locations) && data.locations.length) {
+        populateAreas(data.locations);
+      }
+    } catch {
+      // Network/Airtable issue: the dropdown still offers "My area isn't
+      // listed", so the customer can order with the fee confirmed afterwards.
+    }
+  }
+
+  // Re-price the summary whenever the chosen area changes.
+  document.getElementById('town')?.addEventListener('change', renderSummary);
+
   updateBadge();
   renderSummary();
+  loadAreas();
 </script>
 </body>
 </html>

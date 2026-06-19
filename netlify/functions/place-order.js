@@ -35,6 +35,25 @@ const ORDERS_TABLE_ID = 'tbl7mY2r8TUhWBVgE';
 // the charged delivery fee is authoritative, never trusted from the client.
 const LOCATIONS_TABLE_ID = 'tblBjtLDlEKnPlX4y';
 
+// Per-size stock/sold columns on the Products table. The `sizes` field the
+// storefront reads is an Airtable formula derived purely from these stock_<size>
+// columns (a size is "listed" only while its column is > 0), so per-size stock —
+// not the aggregate stock_quantity — is the authoritative gate for a given size.
+const SIZE_COLUMNS = {
+  XS:  { stock: 'stock_xs',  sold: 'sold_xs'  },
+  S:   { stock: 'stock_s',   sold: 'sold_s'   },
+  M:   { stock: 'stock_m',   sold: 'sold_m'   },
+  L:   { stock: 'stock_l',   sold: 'sold_l'   },
+  XL:  { stock: 'stock_xl',  sold: 'sold_xl'  },
+  XXL: { stock: 'stock_xxl', sold: 'sold_xxl' },
+};
+
+/** Normalises a client size to the canonical label used as a SIZE_COLUMNS key
+ *  (e.g. " m " → "M"). Empty string when no size was supplied. */
+function normaliseSize(size) {
+  return (size ?? '').toString().trim().toUpperCase();
+}
+
 const MAX_LINES = 25;
 const PER_LINE_TIMEOUT_MS = 6_000;
 const ORDER_WRITE_TIMEOUT_MS = 6_000;
@@ -174,11 +193,22 @@ async function fetchRecord(apiKey, id, signal) {
   }
   const rec = await res.json();
   const f = rec.fields || {};
+  const num = (v) => (typeof v === 'number' ? v : 0);
+  // Read the per-size stock/sold columns alongside the aggregate so a single
+  // size can be gated and decremented independently of the total.
+  const sizeStock = {};
+  const sizeSold = {};
+  for (const [label, col] of Object.entries(SIZE_COLUMNS)) {
+    sizeStock[label] = num(f[col.stock]);
+    sizeSold[label] = num(f[col.sold]);
+  }
   return {
-    stock_quantity: typeof f.stock_quantity === 'number' ? f.stock_quantity : 0,
-    units_sold: typeof f.units_sold === 'number' ? f.units_sold : 0,
+    stock_quantity: num(f.stock_quantity),
+    units_sold: num(f.units_sold),
     in_stock: f.in_stock === true,
     name: f.Name || '',
+    sizeStock,
+    sizeSold,
   };
 }
 
@@ -280,25 +310,43 @@ async function processLine(apiKey, line) {
 
   const before = await fetchRecord(apiKey, line.id, ctrl);
 
-  if (before.stock_quantity < line.qty) {
-    return {
-      id: line.id,
-      name: line.name || before.name,
-      size: line.size || '',
-      requested: line.qty,
-      before,
-      after: null,
-      ok: false,
-      error:
-        before.stock_quantity === 0
-          ? 'Sold out'
-          : `Only ${before.stock_quantity} left`,
-    };
+  const size = normaliseSize(line.size);
+  const column = size ? SIZE_COLUMNS[size] : null;
+
+  const fail = (error) => ({
+    id: line.id,
+    name: line.name || before.name,
+    size: line.size || '',
+    requested: line.qty,
+    before,
+    after: null,
+    ok: false,
+    error,
+  });
+
+  // A size we don't recognise has no stock column to honour, so it can never
+  // be "listed" — reject rather than fall through to the aggregate gate.
+  if (size && !column) return fail('That size is unavailable');
+
+  // Authoritative availability: the requested size's own stock when a size was
+  // supplied, otherwise the aggregate (older clients may omit size entirely).
+  // This is the fix for the oversell bug — a size sold out at the per-size
+  // level is rejected even while other sizes keep the aggregate above zero.
+  const available = column ? before.sizeStock[size] : before.stock_quantity;
+  if (available < line.qty) {
+    return fail(available === 0 ? 'Sold out' : `Only ${available} left`);
   }
 
-  const newStock = before.stock_quantity - line.qty;
+  // Decrement the per-size column (when known) AND the aggregate in the same
+  // write, so the `sizes` formula, calculated_stock_quantity and in_stock stay
+  // truthful after every sale instead of drifting out of sync.
+  const newStock = Math.max(0, before.stock_quantity - line.qty);
   const newSold = before.units_sold + line.qty;
   const fields = { stock_quantity: newStock, units_sold: newSold };
+  if (column) {
+    fields[column.stock] = Math.max(0, before.sizeStock[size] - line.qty);
+    fields[column.sold] = before.sizeSold[size] + line.qty;
+  }
   if (newStock === 0) fields.in_stock = false;
 
   await patchAirtable(apiKey, line.id, fields, ctrl);
@@ -310,10 +358,14 @@ async function processLine(apiKey, line) {
     requested: line.qty,
     price: line.price,
     before,
-    after: { stock_quantity: newStock, units_sold: newSold },
+    after: fields,
     ok: true,
   };
 }
+
+// Exposed for unit tests (place-order.test.js). Not used by the handler path.
+exports.processLine = processLine;
+exports.validateOrder = validateOrder;
 
 // ── Handler ────────────────────────────────────────────────
 exports.handler = async (event) => {

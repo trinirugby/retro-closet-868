@@ -66,19 +66,31 @@ function render(p) {
     ? `<img class="product-card__img product-card__img--back" src="${p.imageBack}" alt="${p.name} back" onerror="this.style.display='none'">`
     : `<div class="product-card__img-placeholder" style="transform:rotateY(180deg)">No Image</div>`;
 
-  const sizePills = ['S', 'M', 'L'].map(s =>
+  // Only offer the sizes Airtable actually lists. `p.sizes` is the formula
+  // string (e.g. "M, L, ") derived from the per-size stock columns, so a size
+  // that's out of stock simply isn't there. Hardcoding S/M/L here was letting
+  // shoppers pick sizes the product doesn't carry (and hid XL/XXL when present).
+  const availableSizes = (Array.isArray(p.sizes) ? p.sizes : String(p.sizes || '').split(','))
+    .map(s => s.trim().toUpperCase())
+    .filter(Boolean);
+
+  const sizePills = availableSizes.map(s =>
     `<button class="size-pill" data-size="${s}" type="button">${s}</button>`
   ).join('');
+
+  // No purchasable sizes (sold out, or stock present but no size listed) means
+  // there's nothing to buy — present the sold-out state rather than dead pills.
+  const unavailable = soldOut || availableSizes.length === 0;
 
   const descHtml = p.description
     ? `<p class="product-detail__desc">${p.description}</p>`
     : '';
 
-  const soldOutBadge = soldOut
+  const soldOutBadge = unavailable
     ? `<span class="product-card__badge product-card__badge--sale" style="position:static;display:inline-block;margin-bottom:1rem">Sold Out</span>`
     : '';
 
-  const actionsHtml = soldOut
+  const actionsHtml = unavailable
     ? `<p class="product-detail__soldout">This jersey is currently sold out.</p>`
     : `
       <div class="product-detail__sizes">
@@ -112,7 +124,7 @@ function render(p) {
       </div>
     </div>`;
 
-  if (soldOut) return;
+  if (unavailable) return;
 
   // Size pill selection
   root.querySelectorAll('.size-pill').forEach(pill => {

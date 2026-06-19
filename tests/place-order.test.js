@@ -1,8 +1,12 @@
 /* ============================================================
    PLACE-ORDER.TEST.JS — size-aware stock gating
 
-   Run: `node --test netlify/functions/place-order.test.js`
+   Run: `node --test tests/place-order.test.js`
    (Node 18+; uses built-in node:test + global fetch — no deps).
+
+   Lives outside netlify/functions/ on purpose: Netlify auto-bundles
+   every top-level .js in the functions dir as a deployable function,
+   and a test file there fails the build.
 
    These tests pin the behaviour that fixes the reported bug:
    a size must not be orderable unless its own per-size stock
@@ -12,7 +16,7 @@
 const test = require('node:test');
 const assert = require('node:assert');
 
-const { processLine } = require('./place-order.js');
+const { processLine } = require('../netlify/functions/place-order.js');
 
 // Stubs global fetch: GET returns the given product fields; PATCH bodies are
 // captured so a test can assert exactly what was written back to Airtable.

@@ -11,7 +11,7 @@
 // product tags + a schema.org Product JSON-LD block into the <head> before the
 // page is sent. Real visitors still get the JS-hydrated page unchanged.
 
-const BASE_ID = 'appcA2sFnpO4O9x7N';
+const BASE_ID = 'appOvsTaUDIkXqF17';
 const TABLE_ID = 'tblWjg7NqsZvK0otW';
 
 const esc = (s) =>

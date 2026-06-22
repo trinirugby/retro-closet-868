@@ -27,7 +27,7 @@
      Low-volume retail; seller reconciles in Airtable.
    ============================================================ */
 
-const BASE_ID = 'appcA2sFnpO4O9x7N';
+const BASE_ID = 'appOvsTaUDIkXqF17';
 const TABLE_ID = 'tblWjg7NqsZvK0otW';
 // Orders table — one record per placed order (audit trail for the seller).
 const ORDERS_TABLE_ID = 'tbl7mY2r8TUhWBVgE';

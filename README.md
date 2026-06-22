@@ -9,7 +9,7 @@ Live: <https://retrocloset.org> · Instagram: [@retrocloset868](https://instagra
 - Vanilla HTML + CSS + ES modules (no build step for the HTML).
 - Netlify Functions (Node 20, CommonJS) for serverless endpoints.
 - Hosting: Netlify (auto-deploys from `main`).
-- Source of truth for product data: **Airtable** base `appcA2sFnpO4O9x7N`, table `tblWjg7NqsZvK0otW` (Products) — the same base the sister dashboard repo reads/writes.
+- Source of truth for product data: **Airtable** base `appOvsTaUDIkXqF17`, table `tblWjg7NqsZvK0otW` (Products) — the same base the sister dashboard repo reads/writes.
 
 ## Layout
 
@@ -135,4 +135,4 @@ Push to `main` → Netlify auto-deploys. `AIRTABLE_API_KEY` must be set in the N
 ## Related
 
 - **Dashboard repo:** [`trinirugby/Retro-Closet-Dashboard`](https://github.com/trinirugby/Retro-Closet-Dashboard) (private). The seller-side stock-management UI for the same Airtable base.
-- **Airtable base:** `appcA2sFnpO4O9x7N` / table `tblWjg7NqsZvK0otW`.
+- **Airtable base:** `appOvsTaUDIkXqF17` / table `tblWjg7NqsZvK0otW`.

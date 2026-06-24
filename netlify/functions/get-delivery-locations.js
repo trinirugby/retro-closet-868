@@ -15,7 +15,7 @@
    the browser.
    ============================================================ */
 
-const BASE_ID = 'appcA2sFnpO4O9x7N';
+const BASE_ID = 'appOvsTaUDIkXqF17';
 // Delivery Locations table — one record per courier area (Location, Price, Active).
 const TABLE_ID = 'tblBjtLDlEKnPlX4y';
 

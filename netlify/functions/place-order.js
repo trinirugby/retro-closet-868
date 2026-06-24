@@ -501,7 +501,7 @@ exports.handler = async (event) => {
     orderRef,
     customer,
     discount,
-    totals: { ...totals, total: recordedTotal },
+    totals: recordedTotals,
     results,
   });
 };

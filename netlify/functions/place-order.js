@@ -3,9 +3,10 @@
 
    Called by the inline submit handler in `checkout.html`. For each
    cart line, reads the current Airtable record, then PATCHes Airtable
-   directly so stock decrements and (if stock hits 0) `in_stock` is
-   flipped to false in the same write — keeping the storefront's
-   `{in_stock}=TRUE()` filter in sync without manual intervention.
+   directly so the per-size and aggregate stock columns decrement. The
+   base has no `in_stock` field; `calculated_stock_quantity` is a formula
+   over the per-size columns, so the storefront's
+   `{calculated_stock_quantity}>0` filter stays correct on its own.
 
    History: writes used to go through the sister dashboard
    (`trinirugby/Retro-Closet-Dashboard` on Railway). That service was
@@ -338,8 +339,10 @@ async function processLine(apiKey, line) {
   }
 
   // Decrement the per-size column (when known) AND the aggregate in the same
-  // write, so the `sizes` formula, calculated_stock_quantity and in_stock stay
-  // truthful after every sale instead of drifting out of sync.
+  // write, so the `sizes` formula and calculated_stock_quantity stay truthful
+  // after every sale instead of drifting out of sync. There is no `in_stock`
+  // field to maintain in this base — calculated_stock_quantity is a formula over
+  // the per-size columns, so it (and the catalogue's filter) update on their own.
   const newStock = Math.max(0, before.stock_quantity - line.qty);
   const newSold = before.units_sold + line.qty;
   const fields = { stock_quantity: newStock, units_sold: newSold };
@@ -347,7 +350,6 @@ async function processLine(apiKey, line) {
     fields[column.stock] = Math.max(0, before.sizeStock[size] - line.qty);
     fields[column.sold] = before.sizeSold[size] + line.qty;
   }
-  if (newStock === 0) fields.in_stock = false;
 
   await patchAirtable(apiKey, line.id, fields, ctrl);
 

@@ -64,14 +64,16 @@ exports.handler = async (event) => {
       league: f['league'] || '',
       price: f['price_ttd'] || 0,
       sizes: f['sizes'] || [],
-      inStock: f['in_stock'] || false,
       imageFront: f['image_url_front'] || '',
       imageBack: f['image_url_back'] || '',
       badge: f['badge'] || '',
       description: f['description'] || '',
-      // null → 0 (matches dashboard normalisation in lib/types.ts)
+      // null → 0. calculated_stock_quantity is the formula aggregate of the
+      // per-size columns (the new base has no `in_stock` field), so inStock and
+      // the "Sold Out" state reflect actual size availability.
       stockQuantity:
-        typeof f['stock_quantity'] === 'number' ? f['stock_quantity'] : 0,
+        typeof f['calculated_stock_quantity'] === 'number' ? f['calculated_stock_quantity'] : 0,
+      inStock: (typeof f['calculated_stock_quantity'] === 'number' ? f['calculated_stock_quantity'] : 0) > 0,
     };
 
     return {

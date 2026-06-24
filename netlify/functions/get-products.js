@@ -6,14 +6,16 @@ const FIELDS = [
   'league',
   'price_ttd',
   'sizes',
-  'in_stock',
   'image_url_front',
   'image_url_back',
   'badge',
   'description',
-  // Exposed so the storefront can surface "Only N left" hints without a
-  // second round-trip. The `{in_stock}=TRUE()` filter is unchanged.
-  'stock_quantity',
+  // Aggregate availability = sum of the per-size stock_<size> columns, kept by
+  // an Airtable formula so it can't drift. This is the authoritative "in stock"
+  // signal: the new base has no `in_stock` field, and this auto-updates to 0 the
+  // moment the last size sells, so sold-out jerseys drop out of the catalogue
+  // with no manual upkeep. Also surfaces "Only N left" hints in one round-trip.
+  'calculated_stock_quantity',
 ];
 
 const CORS = {
@@ -42,7 +44,7 @@ exports.handler = async (event) => {
 
     do {
       const params = new URLSearchParams({
-        filterByFormula: '{in_stock}=TRUE()',
+        filterByFormula: '{calculated_stock_quantity}>0',
         pageSize: '100',
       });
       FIELDS.forEach((f) => params.append('fields[]', f));
@@ -67,14 +69,15 @@ exports.handler = async (event) => {
           league: f['league'] || '',
           price: f['price_ttd'] || 0,
           sizes: f['sizes'] || [],
-          inStock: f['in_stock'] || false,
           imageFront: f['image_url_front'] || '',
           imageBack: f['image_url_back'] || '',
           badge: f['badge'] || '',
           description: f['description'] || '',
-          // null → 0 (matches dashboard normalisation in lib/types.ts)
+          // null → 0. calculated_stock_quantity is the formula aggregate, so
+          // inStock and the "Only N left" hint stay truthful per actual size stock.
           stockQuantity:
-            typeof f['stock_quantity'] === 'number' ? f['stock_quantity'] : 0,
+            typeof f['calculated_stock_quantity'] === 'number' ? f['calculated_stock_quantity'] : 0,
+          inStock: (typeof f['calculated_stock_quantity'] === 'number' ? f['calculated_stock_quantity'] : 0) > 0,
         });
       }
       offset = data.offset || null;

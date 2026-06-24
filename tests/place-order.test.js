@@ -93,9 +93,9 @@ test('rejects an unknown size label outright', async () => {
   }
 });
 
-test('flips in_stock to false when the last unit (across all sizes) sells', async () => {
+test('zeroes the size and aggregate when the last unit (across all sizes) sells', async () => {
   const lastOne = {
-    Name: 'Last One', stock_quantity: 1, units_sold: 9, in_stock: true,
+    Name: 'Last One', stock_quantity: 1, units_sold: 9,
     stock_xs: 0, stock_s: 0, stock_m: 0, stock_l: 1, stock_xl: 0, stock_xxl: 0,
     sold_xs: 0, sold_s: 0, sold_m: 0, sold_l: 0, sold_xl: 0, sold_xxl: 0,
   };
@@ -103,8 +103,11 @@ test('flips in_stock to false when the last unit (across all sizes) sells', asyn
   try {
     const r = await processLine('key', { id: 'rec1', qty: 1, size: 'L', name: 'Last One', price: 100 });
     assert.equal(r.ok, true);
-    assert.equal(patches[0].in_stock, false, 'in_stock should flip to false at zero aggregate');
-    assert.equal(patches[0].stock_l, 0);
+    assert.equal(patches[0].stock_quantity, 0, 'aggregate should hit zero');
+    assert.equal(patches[0].stock_l, 0, 'sold size column should hit zero');
+    // No `in_stock` field is written: this base derives availability from the
+    // calculated_stock_quantity formula, which goes to 0 on its own.
+    assert.ok(!('in_stock' in patches[0]), 'in_stock must not be written');
   } finally {
     restore();
   }

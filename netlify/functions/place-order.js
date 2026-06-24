@@ -4,8 +4,8 @@
    Called by the inline submit handler in `checkout.html`. For each
    cart line, reads the current Airtable record, then PATCHes Airtable
    directly so the per-size and aggregate stock columns decrement. The
-   base has no `in_stock` field; `calculated_stock_quantity` is a formula
-   over the per-size columns, so the storefront's
+   base's `in_stock` checkbox is not maintained; `calculated_stock_quantity`
+   is a formula over the per-size columns, so the storefront's
    `{calculated_stock_quantity}>0` filter stays correct on its own.
 
    History: writes used to go through the sister dashboard
@@ -340,9 +340,10 @@ async function processLine(apiKey, line) {
 
   // Decrement the per-size column (when known) AND the aggregate in the same
   // write, so the `sizes` formula and calculated_stock_quantity stay truthful
-  // after every sale instead of drifting out of sync. There is no `in_stock`
-  // field to maintain in this base — calculated_stock_quantity is a formula over
-  // the per-size columns, so it (and the catalogue's filter) update on their own.
+  // after every sale instead of drifting out of sync. We don't touch the
+  // `in_stock` checkbox (it isn't maintained here) — calculated_stock_quantity
+  // is a formula over the per-size columns, so it (and the catalogue's filter)
+  // update on their own.
   const newStock = Math.max(0, before.stock_quantity - line.qty);
   const newSold = before.units_sold + line.qty;
   const fields = { stock_quantity: newStock, units_sold: newSold };

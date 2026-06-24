@@ -12,7 +12,8 @@ const FIELDS = [
   'description',
   // Aggregate availability = sum of the per-size stock_<size> columns, kept by
   // an Airtable formula so it can't drift. This is the authoritative "in stock"
-  // signal: the new base has no `in_stock` field, and this auto-updates to 0 the
+  // signal. The base's `in_stock` checkbox is not maintained here (nothing keeps
+  // it in sync), so we rely on this formula instead — it auto-updates to 0 the
   // moment the last size sells, so sold-out jerseys drop out of the catalogue
   // with no manual upkeep. Also surfaces "Only N left" hints in one round-trip.
   'calculated_stock_quantity',
